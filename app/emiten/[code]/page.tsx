@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 interface Shareholder {
   investor_name: string;
   investor_type: string;
-  is_foreign: boolean;
+  local_foreign: string;
   percentage: number;
   holdings: number;
 }
@@ -29,12 +29,11 @@ export default function EmitenDetail() {
     async function fetchData() {
       setLoading(true);
       
-      // Ambil data pemegang saham
+      // Ambil data pemegang saham dari view
       const { data: holders, error } = await supabase
-        .from('shareholders')
-        .select('investor_name, investor_type, is_foreign, percentage, holdings')
+        .from('shareholders_clean')
+        .select('investor_name, investor_type, local_foreign, percentage, holdings')
         .eq('share_code', code)
-        .eq('period', '27-Feb-26')
         .order('percentage', { ascending: false });
 
       if (error) {
@@ -45,7 +44,7 @@ export default function EmitenDetail() {
 
       // Ambil info emiten dari baris pertama
       const { data: info } = await supabase
-        .from('shareholders')
+        .from('shareholders_clean')
         .select('issuer_name, sector, free_float')
         .eq('share_code', code)
         .limit(1);
@@ -65,8 +64,8 @@ export default function EmitenDetail() {
   }, [code]);
 
   // Hitung statistik
-  const totalAsing = shareholders.reduce((sum, s) => sum + (s.is_foreign ? s.percentage : 0), 0);
-  const totalDomestik = shareholders.reduce((sum, s) => sum + (!s.is_foreign ? s.percentage : 0), 0);
+  const totalAsing = shareholders.reduce((sum, s) => sum + (s.local_foreign === 'F' ? s.percentage : 0), 0);
+  const totalDomestik = shareholders.reduce((sum, s) => sum + (s.local_foreign === 'D' ? s.percentage : 0), 0);
   const top10 = shareholders.slice(0, 10);
 
   if (loading) {
@@ -113,7 +112,7 @@ export default function EmitenDetail() {
           </div>
         </div>
 
-        {/* Pie Chart Sederhana (menggunakan div progress) */}
+        {/* Pie Chart Sederhana */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">🌍 Komposisi Kepemilikan</h2>
@@ -169,7 +168,7 @@ export default function EmitenDetail() {
                     <td className="px-4 py-2 text-sm font-medium text-gray-800">{holder.investor_name}</td>
                     <td className="px-4 py-2 text-sm text-gray-500">{holder.investor_type}</td>
                     <td className="px-4 py-2 text-sm text-right">
-                      {holder.is_foreign ? (
+                      {holder.local_foreign === 'F' ? (
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Asing</span>
                       ) : (
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Domestik</span>
@@ -197,7 +196,7 @@ export default function EmitenDetail() {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className={`h-2 rounded-full ${holder.is_foreign ? 'bg-blue-500' : 'bg-green-500'}`}
+                    className={`h-2 rounded-full ${holder.local_foreign === 'F' ? 'bg-blue-500' : 'bg-green-500'}`}
                     style={{ width: `${Math.min(holder.percentage, 100)}%` }}
                   ></div>
                 </div>
