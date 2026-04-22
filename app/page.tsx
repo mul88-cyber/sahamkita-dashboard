@@ -22,14 +22,13 @@ export default function Dashboard() {
     async function fetchData() {
       setLoading(true);
       
-      // Ambil daftar emiten unik beserta ringkasannya
+      // Ambil semua data dari view shareholders_clean
       const { data: shareholders, error } = await supabase
-        .from('shareholders')
-        .select('share_code, issuer_name, sector, percentage, is_foreign')
-        .eq('period', '27-Feb-26');
+        .from('shareholders_clean')
+        .select('share_code, issuer_name, sector, percentage, local_foreign');
 
       if (error) {
-        console.error(error);
+        console.error('Error fetching data:', error);
         setLoading(false);
         return;
       }
@@ -38,7 +37,7 @@ export default function Dashboard() {
       const emitenMap = new Map<string, EmitenSummary>();
       const investorSet = new Set<string>();
 
-      shareholders?.forEach(row => {
+      shareholders?.forEach((row: any) => {
         investorSet.add(row.investor_name);
         
         if (!emitenMap.has(row.share_code)) {
@@ -53,7 +52,7 @@ export default function Dashboard() {
         
         const emiten = emitenMap.get(row.share_code)!;
         emiten.total_holders++;
-        if (row.is_foreign) {
+        if (row.local_foreign === 'F') {
           emiten.foreign_ownership += row.percentage;
         }
       });
