@@ -6,35 +6,34 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 interface Shareholder {
-  investor_name: string;
-  investor_type: string;
-  local_foreign: string;
-  percentage: number;
-  holdings: number;
+  INVESTOR_NAME: string;
+  INVESTOR_TYPE: string;
+  LOCAL_FOREIGN: string;
+  PERCENTAGE: number;
+  TOTAL_HOLDING_SHARES: number;
 }
 
 interface EmitenInfo {
-  issuer_name: string;
-  sector: string;
-  free_float: number;
+  ISSUER_NAME: string;
+  Sector: string;
+  Free_Float: number;
 }
 
 export default function EmitenDetail() {
   const { code } = useParams();
   const [shareholders, setShareholders] = useState<Shareholder[]>([]);
-  const [emitenInfo, setEmitenInfo] = useState<EmitenInfo | null>(null);
+  const [emitenInfo, setEmitenInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       
-      // Ambil data pemegang saham dari view
       const { data: holders, error } = await supabase
-        .from('shareholders_clean')
-        .select('investor_name, investor_type, local_foreign, percentage, holdings')
-        .eq('share_code', code)
-        .order('percentage', { ascending: false });
+        .from('shareholders')
+        .select('INVESTOR_NAME, INVESTOR_TYPE, LOCAL_FOREIGN, PERCENTAGE, TOTAL_HOLDING_SHARES')
+        .eq('SHARE_CODE', code)
+        .order('PERCENTAGE', { ascending: false });
 
       if (error) {
         console.error(error);
@@ -42,20 +41,15 @@ export default function EmitenDetail() {
         return;
       }
 
-      // Ambil info emiten dari baris pertama
       const { data: info } = await supabase
-        .from('shareholders_clean')
-        .select('issuer_name, sector, free_float')
-        .eq('share_code', code)
+        .from('shareholders')
+        .select('ISSUER_NAME, Sector, "Free Float"')
+        .eq('SHARE_CODE', code)
         .limit(1);
 
       setShareholders(holders || []);
       if (info && info[0]) {
-        setEmitenInfo({
-          issuer_name: info[0].issuer_name,
-          sector: info[0].sector,
-          free_float: info[0].free_float,
-        });
+        setEmitenInfo(info[0]);
       }
       setLoading(false);
     }
@@ -63,9 +57,8 @@ export default function EmitenDetail() {
     if (code) fetchData();
   }, [code]);
 
-  // Hitung statistik
-  const totalAsing = shareholders.reduce((sum, s) => sum + (s.local_foreign === 'F' ? s.percentage : 0), 0);
-  const totalDomestik = shareholders.reduce((sum, s) => sum + (s.local_foreign === 'D' ? s.percentage : 0), 0);
+  const totalAsing = shareholders.reduce((sum, s) => sum + (s.LOCAL_FOREIGN === 'F' ? s.PERCENTAGE : 0), 0);
+  const totalDomestik = shareholders.reduce((sum, s) => sum + (s.LOCAL_FOREIGN === 'D' ? s.PERCENTAGE : 0), 0);
   const top10 = shareholders.slice(0, 10);
 
   if (loading) {
@@ -78,7 +71,6 @@ export default function EmitenDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <Link href="/" className="text-blue-600 hover:underline mb-2 inline-block">
@@ -86,17 +78,16 @@ export default function EmitenDetail() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{code}</h1>
-            <p className="text-gray-500">{emitenInfo?.issuer_name}</p>
+            <p className="text-gray-500">{emitenInfo?.ISSUER_NAME}</p>
             <div className="flex gap-4 mt-2 text-sm">
-              <span className="px-2 py-1 bg-gray-100 rounded">{emitenInfo?.sector}</span>
-              <span className="px-2 py-1 bg-gray-100 rounded">Free Float: {emitenInfo?.free_float}%</span>
+              <span className="px-2 py-1 bg-gray-100 rounded">{emitenInfo?.Sector}</span>
+              <span className="px-2 py-1 bg-gray-100 rounded">Free Float: {emitenInfo?.['Free Float']}%</span>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-gray-500 text-sm">Total Pemegang Saham</div>
@@ -112,7 +103,6 @@ export default function EmitenDetail() {
           </div>
         </div>
 
-        {/* Pie Chart Sederhana */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">🌍 Komposisi Kepemilikan</h2>
@@ -145,7 +135,6 @@ export default function EmitenDetail() {
           </div>
         </div>
 
-        {/* Top 10 Shareholders */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">🏆 Top 10 Pemegang Saham</h2>
@@ -163,18 +152,18 @@ export default function EmitenDetail() {
               </thead>
               <tbody>
                 {top10.map((holder, idx) => (
-                  <tr key={holder.investor_name} className="border-t">
+                  <tr key={holder.INVESTOR_NAME} className="border-t">
                     <td className="px-4 py-2 text-sm text-gray-500">{idx + 1}</td>
-                    <td className="px-4 py-2 text-sm font-medium text-gray-800">{holder.investor_name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{holder.investor_type}</td>
+                    <td className="px-4 py-2 text-sm font-medium text-gray-800">{holder.INVESTOR_NAME}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{holder.INVESTOR_TYPE}</td>
                     <td className="px-4 py-2 text-sm text-right">
-                      {holder.local_foreign === 'F' ? (
+                      {holder.LOCAL_FOREIGN === 'F' ? (
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Asing</span>
                       ) : (
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Domestik</span>
                       )}
                     </td>
-                    <td className="px-4 py-2 text-sm text-right font-semibold">{holder.percentage.toFixed(2)}%</td>
+                    <td className="px-4 py-2 text-sm text-right font-semibold">{holder.PERCENTAGE.toFixed(2)}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -182,22 +171,21 @@ export default function EmitenDetail() {
           </div>
         </div>
 
-        {/* Progress bar visual untuk top holders */}
         <div className="mt-8 bg-white rounded-lg shadow">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">📊 Visualisasi Top 10</h2>
           </div>
           <div className="p-4 space-y-3">
             {top10.map((holder) => (
-              <div key={holder.investor_name}>
+              <div key={holder.INVESTOR_NAME}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="truncate max-w-[200px]">{holder.investor_name}</span>
-                  <span className="font-medium">{holder.percentage.toFixed(2)}%</span>
+                  <span className="truncate max-w-[200px]">{holder.INVESTOR_NAME}</span>
+                  <span className="font-medium">{holder.PERCENTAGE.toFixed(2)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className={`h-2 rounded-full ${holder.local_foreign === 'F' ? 'bg-blue-500' : 'bg-green-500'}`}
-                    style={{ width: `${Math.min(holder.percentage, 100)}%` }}
+                    className={`h-2 rounded-full ${holder.LOCAL_FOREIGN === 'F' ? 'bg-blue-500' : 'bg-green-500'}`}
+                    style={{ width: `${Math.min(holder.PERCENTAGE, 100)}%` }}
                   ></div>
                 </div>
               </div>
