@@ -1,6 +1,7 @@
 // app/emiten/[kode]/page.tsx
 import { supabase } from '@/supabase'; // Sesuaikan path jika berbeda
 import Link from 'next/link';
+import StockChart from '@/components/StockChart';
 
 // Memastikan data selalu up-to-date
 export const dynamic = 'force-dynamic';
@@ -88,10 +89,10 @@ export default async function EmitenDetail({ params }: { params: { kode: string 
           </div>
         </div>
 
-        {/* Placeholder untuk Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6 min-h-[400px] flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200">
-          <p className="mb-2">Area ini siap untuk diisi Grafik Pergerakan Harga (Chart)</p>
-          <p className="text-sm">Menampilkan histori 30 hari terakhir</p>
+        {/* Grafik Interaktif */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Pergerakan Harga & Volume (30 Hari)</h3>
+          <StockChart data={chartData} />
         </div>
       </div>
     </div>
