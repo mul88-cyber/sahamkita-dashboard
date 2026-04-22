@@ -4,176 +4,268 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
-interface EmitenSummary {
-  share_code: string;
-  issuer_name: string;
+interface StockData {
+  stock_code: string;
+  close: number;
+  change_percent: number;
+  volume: number;
+  net_foreign_flow: number;
+  big_player_anomaly: boolean;
+  final_signal: string;
   sector: string;
-  foreign_ownership: number;
-  total_holders: number;
 }
 
 export default function Dashboard() {
-  const [emitenList, setEmitenList] = useState<EmitenSummary[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [stocks, setStocks] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalEmiten: 0, totalInvestor: 0, avgForeign: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterAnomaly, setFilterAnomaly] = useState(false);
+  const [filterSignal, setFilterSignal] = useState('all');
+  const [filterSector, setFilterSector] = useState('all');
+  const [sectors, setSectors] = useState<string[]>([]);
+  const [lastDate, setLastDate] = useState('');
+  const [stats, setStats] = useState({
+    topGainer: [] as StockData[],
+    topLoser: [] as StockData[],
+    topVolume: [] as StockData[],
+    totalNetForeign: 0,
+    anomalyCount: 0
+  });
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       
-      // Ambil semua data dari tabel shareholders
-      const { data: shareholders, error } = await supabase
-        .from('shareholders')
-        .select('SHARE_CODE, ISSUER_NAME, Sector, PERCENTAGE, LOCAL_FOREIGN');
+      // Ambil tanggal terbaru
+      const { data: latest } = await supabase
+        .from('daily_transactions')
+        .select('trading_date')
+        .order('trading_date', { ascending: false })
+        .limit(1);
+      
+      const latestDate = latest?.[0]?.trading_date || '';
+      setLastDate(latestDate);
+
+      // Ambil semua data saham
+      let query = supabase
+        .from('daily_transactions')
+        .select('stock_code, close, change_percent, volume, net_foreign_flow, big_player_anomaly, final_signal, sector')
+        .eq('trading_date', latestDate);
+
+      const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching data:', error);
+        console.error(error);
         setLoading(false);
         return;
       }
 
-      // Proses data untuk summary per emiten
-      const emitenMap = new Map<string, EmitenSummary>();
-      const investorSet = new Set<string>();
+      const stocksData = data as StockData[];
+      setStocks(stocksData);
 
-      shareholders?.forEach((row: any) => {
-        investorSet.add(row.INVESTOR_NAME);
-        
-        if (!emitenMap.has(row.SHARE_CODE)) {
-          emitenMap.set(row.SHARE_CODE, {
-            share_code: row.SHARE_CODE,
-            issuer_name: row.ISSUER_NAME,
-            sector: row.Sector,
-            foreign_ownership: 0,
-            total_holders: 0,
-          });
-        }
-        
-        const emiten = emitenMap.get(row.SHARE_CODE)!;
-        emiten.total_holders++;
-        if (row.LOCAL_FOREIGN === 'F') {
-          emiten.foreign_ownership += row.PERCENTAGE;
-        }
-      });
+      // Hitung statistik
+      const sortedByGain = [...stocksData].sort((a, b) => b.change_percent - a.change_percent);
+      const sortedByVolume = [...stocksData].sort((a, b) => b.volume - a.volume);
+      const totalNetForeign = stocksData.reduce((sum, s) => sum + (s.net_foreign_flow || 0), 0);
+      const anomalyCount = stocksData.filter(s => s.big_player_anomaly).length;
 
-      const emitenArray = Array.from(emitenMap.values());
-      emitenArray.sort((a, b) => b.foreign_ownership - a.foreign_ownership);
-      
-      setEmitenList(emitenArray);
       setStats({
-        totalEmiten: emitenArray.length,
-        totalInvestor: investorSet.size,
-        avgForeign: emitenArray.reduce((sum, e) => sum + e.foreign_ownership, 0) / emitenArray.length,
+        topGainer: sortedByGain.slice(0, 5),
+        topLoser: sortedByGain.slice(-5).reverse(),
+        topVolume: sortedByVolume.slice(0, 5),
+        totalNetForeign,
+        anomalyCount
       });
+
+      // Ambil daftar sektor unik
+      const uniqueSectors = [...new Set(stocksData.map(s => s.sector).filter(Boolean))];
+      setSectors(uniqueSectors);
+
       setLoading(false);
     }
 
     fetchData();
   }, []);
 
-  const filteredEmiten = emitenList.filter(e => 
-    e.share_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.issuer_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter stocks
+  const filteredStocks = stocks.filter(s => {
+    if (filterAnomaly && !s.big_player_anomaly) return false;
+    if (filterSignal !== 'all' && s.final_signal !== filterSignal) return false;
+    if (filterSector !== 'all' && s.sector !== filterSector) return false;
+    if (searchTerm && !s.stock_code.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    return true;
+  });
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl font-bold text-blue-600">📊 SahamKita</h1>
-            <div className="relative w-full md:w-96">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <h1 className="text-xl font-bold text-blue-600">📊 SahamKita</h1>
+            <div className="text-xs text-gray-400">Update: {lastDate}</div>
+            <div className="relative w-full md:w-64">
               <input
                 type="text"
-                placeholder="Cari kode saham atau nama perusahaan..."
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Cari kode saham..."
+                className="w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <svg className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-gray-500 text-sm">Total Emiten</div>
-            <div className="text-3xl font-bold text-gray-800">{stats.totalEmiten}</div>
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="text-gray-500 text-xs">Net Foreign Flow</div>
+            <div className={`text-lg font-bold ${stats.totalNetForeign >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {stats.totalNetForeign >= 0 ? '+' : ''}{(stats.totalNetForeign / 1e9).toFixed(1)}B
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-gray-500 text-sm">Total Investor Unik</div>
-            <div className="text-3xl font-bold text-gray-800">{stats.totalInvestor.toLocaleString()}</div>
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="text-gray-500 text-xs">Big Player Anomaly</div>
+            <div className="text-lg font-bold text-orange-600">{stats.anomalyCount}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-gray-500 text-sm">Rata-rata Kepemilikan Asing</div>
-            <div className="text-3xl font-bold text-gray-800">{stats.avgForeign.toFixed(1)}%</div>
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="text-gray-500 text-xs">Total Saham</div>
+            <div className="text-lg font-bold text-gray-800">{stocks.length}</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="text-gray-500 text-xs">Sektor</div>
+            <div className="text-lg font-bold text-gray-800">{sectors.length}</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-4 py-3 border-b">
-            <h2 className="font-semibold text-gray-800">🌍 Top 5 Emiten dengan Kepemilikan Asing Tertinggi</h2>
+        {/* Top Gainers & Losers */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-3 py-2 border-b font-semibold text-sm">🚀 Top Gainer</div>
+            {stats.topGainer.map((s, i) => (
+              <Link key={s.stock_code} href={`/emiten/${s.stock_code}`}>
+                <div className="px-3 py-2 border-b last:border-0 flex justify-between hover:bg-gray-50 cursor-pointer">
+                  <span className="font-medium text-sm">{s.stock_code}</span>
+                  <span className="text-green-600 text-sm">+{s.change_percent?.toFixed(2)}%</span>
+                </div>
+              </Link>
+            ))}
           </div>
-          <div className="p-4">
-            {emitenList.slice(0, 5).map((emiten, idx) => (
-              <Link key={emiten.share_code} href={`/emiten/${emiten.share_code}`}>
-                <div className="flex items-center justify-between py-2 border-b last:border-0 cursor-pointer hover:bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 w-6">{idx + 1}</span>
-                    <div>
-                      <div className="font-medium text-gray-800">{emiten.share_code}</div>
-                      <div className="text-xs text-gray-500">{emiten.issuer_name}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-blue-600">{emiten.foreign_ownership.toFixed(1)}%</div>
-                    <div className="text-xs text-gray-400">{emiten.sector}</div>
-                  </div>
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-3 py-2 border-b font-semibold text-sm">📉 Top Loser</div>
+            {stats.topLoser.map((s, i) => (
+              <Link key={s.stock_code} href={`/emiten/${s.stock_code}`}>
+                <div className="px-3 py-2 border-b last:border-0 flex justify-between hover:bg-gray-50 cursor-pointer">
+                  <span className="font-medium text-sm">{s.stock_code}</span>
+                  <span className="text-red-600 text-sm">{s.change_percent?.toFixed(2)}%</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-3 py-2 border-b font-semibold text-sm">📊 Top Volume</div>
+            {stats.topVolume.map((s, i) => (
+              <Link key={s.stock_code} href={`/emiten/${s.stock_code}`}>
+                <div className="px-3 py-2 border-b last:border-0 flex justify-between hover:bg-gray-50 cursor-pointer">
+                  <span className="font-medium text-sm">{s.stock_code}</span>
+                  <span className="text-gray-600 text-sm">{(s.volume / 1e6).toFixed(1)}M</span>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
+        {/* Screener Filters */}
+        <div className="bg-white rounded-lg shadow mb-6">
           <div className="px-4 py-3 border-b">
-            <h2 className="font-semibold text-gray-800">📋 Daftar Emiten</h2>
+            <h2 className="font-semibold">🔍 Stock Screener</h2>
           </div>
+          <div className="p-4 flex flex-wrap gap-3">
+            <button
+              onClick={() => { setFilterAnomaly(false); setFilterSignal('all'); }}
+              className={`px-3 py-1 rounded-full text-sm ${!filterAnomaly && filterSignal === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            >
+              Semua
+            </button>
+            <button
+              onClick={() => setFilterAnomaly(true)}
+              className={`px-3 py-1 rounded-full text-sm ${filterAnomaly ? 'bg-orange-600 text-white' : 'bg-gray-200'}`}
+            >
+              🔥 Big Player Anomaly
+            </button>
+            <select
+              value={filterSignal}
+              onChange={(e) => setFilterSignal(e.target.value)}
+              className="px-3 py-1 rounded-full text-sm bg-gray-200 border-none"
+            >
+              <option value="all">Semua Signal</option>
+              <option value="Strong Akumulasi">Strong Akumulasi</option>
+              <option value="Akumulasi">Akumulasi</option>
+              <option value="Strong Distribusi">Strong Distribusi</option>
+              <option value="Distribusi">Distribusi</option>
+              <option value="Netral">Netral</option>
+            </select>
+            <select
+              value={filterSector}
+              onChange={(e) => setFilterSector(e.target.value)}
+              className="px-3 py-1 rounded-full text-sm bg-gray-200 border-none"
+            >
+              <option value="all">Semua Sektor</option>
+              {sectors.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Tabel Hasil Screener */}
+        <div className="bg-white rounded-lg shadow">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Kode</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Nama Perusahaan</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Sektor</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">Kepemilikan Asing</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">Total Pemegang</th>
+                  <th className="px-3 py-2 text-left">Kode</th>
+                  <th className="px-3 py-2 text-right">Harga</th>
+                  <th className="px-3 py-2 text-right">Change</th>
+                  <th className="px-3 py-2 text-right">Volume</th>
+                  <th className="px-3 py-2 text-right">Net Foreign</th>
+                  <th className="px-3 py-2 text-left">Signal</th>
+                  <th className="px-3 py-2 text-left">Anomaly</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredEmiten.map((emiten) => (
-                  <tr key={emiten.share_code} className="border-t hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/emiten/${emiten.share_code}`}>
-                    <td className="px-4 py-2 text-sm font-medium text-blue-600">{emiten.share_code}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{emiten.issuer_name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{emiten.sector}</td>
-                    <td className="px-4 py-2 text-sm text-right font-medium">{emiten.foreign_ownership.toFixed(1)}%</td>
-                    <td className="px-4 py-2 text-sm text-right text-gray-500">{emiten.total_holders}</td>
+                {filteredStocks.slice(0, 50).map((s) => (
+                  <tr key={s.stock_code} className="border-t hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/emiten/${s.stock_code}`}>
+                    <td className="px-3 py-2 font-medium text-blue-600">{s.stock_code}</td>
+                    <td className="px-3 py-2 text-right">{s.close?.toLocaleString()}</td>
+                    <td className={`px-3 py-2 text-right ${s.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {s.change_percent?.toFixed(2)}%
+                    </td>
+                    <td className="px-3 py-2 text-right">{(s.volume / 1e6).toFixed(1)}M</td>
+                    <td className={`px-3 py-2 text-right ${s.net_foreign_flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(s.net_foreign_flow / 1e6).toFixed(0)}M
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`px-2 py-0.5 rounded text-xs ${
+                        s.final_signal?.includes('Strong Akum') ? 'bg-green-100 text-green-700' :
+                        s.final_signal?.includes('Akum') ? 'bg-green-50 text-green-600' :
+                        s.final_signal?.includes('Distribusi') ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {s.final_signal || '-'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      {s.big_player_anomaly && <span className="text-orange-600">🔥</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
