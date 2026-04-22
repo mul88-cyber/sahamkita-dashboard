@@ -22,10 +22,10 @@ export default function Dashboard() {
     async function fetchData() {
       setLoading(true);
       
-      // Ambil semua data dari view shareholders_clean
+      // Ambil semua data dari tabel shareholders
       const { data: shareholders, error } = await supabase
-        .from('shareholders_clean')
-        .select('share_code, issuer_name, sector, percentage, local_foreign');
+        .from('shareholders')
+        .select('SHARE_CODE, ISSUER_NAME, Sector, PERCENTAGE, LOCAL_FOREIGN');
 
       if (error) {
         console.error('Error fetching data:', error);
@@ -38,22 +38,22 @@ export default function Dashboard() {
       const investorSet = new Set<string>();
 
       shareholders?.forEach((row: any) => {
-        investorSet.add(row.investor_name);
+        investorSet.add(row.INVESTOR_NAME);
         
-        if (!emitenMap.has(row.share_code)) {
-          emitenMap.set(row.share_code, {
-            share_code: row.share_code,
-            issuer_name: row.issuer_name,
-            sector: row.sector,
+        if (!emitenMap.has(row.SHARE_CODE)) {
+          emitenMap.set(row.SHARE_CODE, {
+            share_code: row.SHARE_CODE,
+            issuer_name: row.ISSUER_NAME,
+            sector: row.Sector,
             foreign_ownership: 0,
             total_holders: 0,
           });
         }
         
-        const emiten = emitenMap.get(row.share_code)!;
+        const emiten = emitenMap.get(row.SHARE_CODE)!;
         emiten.total_holders++;
-        if (row.local_foreign === 'F') {
-          emiten.foreign_ownership += row.percentage;
+        if (row.LOCAL_FOREIGN === 'F') {
+          emiten.foreign_ownership += row.PERCENTAGE;
         }
       });
 
@@ -90,7 +90,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -111,7 +110,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-4">
@@ -128,7 +126,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Top 5 Foreign Ownership */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">🌍 Top 5 Emiten dengan Kepemilikan Asing Tertinggi</h2>
@@ -154,7 +151,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Daftar Semua Emiten */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-4 py-3 border-b">
             <h2 className="font-semibold text-gray-800">📋 Daftar Emiten</h2>
