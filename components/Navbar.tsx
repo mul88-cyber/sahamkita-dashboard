@@ -38,8 +38,10 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: '📊 Dashboard' },
     { href: '/screener', label: '🔍 Screener' },
+    { href: '/heatmap', label: '🗺️ Heatmap' },        // 🆕 TAMBAH
+    { href: '/compare', label: '⚖️ Compare' },         // 🆕 TAMBAH
     { href: '/watchlist', label: '⭐ Watchlist', requiresAuth: true },
-    { href: '/pricing', label: '💎 Pricing' },  // 🆕 TAMBAH INI
+    { href: '/pricing', label: '💎 Pricing' },
   ];
 
   return (
