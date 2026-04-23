@@ -66,11 +66,11 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-30 h-full bg-gray-900 text-white transition-all duration-300
+        fixed top-0 left-0 z-30 h-full bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300
         ${collapsed ? '-translate-x-full md:translate-x-0 md:w-16' : 'translate-x-0 w-64'}
       `}>
         {/* Logo */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-gray-700">
+        <div className="flex items-center justify-between h-14 px-4 border-b border-gray-700 dark:border-gray-800">
           {!collapsed && (
             <Link href="/" className="font-bold text-lg">
               📈 SahamKita
