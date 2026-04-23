@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
+import AddToWatchlistButton from '@/components/AddToWatchlistButton';
 
 export const revalidate = 3600;
 
@@ -162,9 +163,13 @@ export default async function EmitenDetail({
           
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {stockCode}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {stockCode}
+                </h1>
+                {/* 🆕 TOMBOL WATCHLIST */}
+                <AddToWatchlistButton stockCode={stockCode} />
+              </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <p className="text-gray-500">
                   {latestData.sector || 'Sektor tidak tersedia'}
