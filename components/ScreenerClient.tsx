@@ -7,6 +7,7 @@ export default function ScreenerClient({ initialStocks, sectors, lastDate }: any
   const [mode, setMode] = useState<'whale' | 'split'>('whale');
   const [minValue, setMinValue] = useState(1_000_000_000); // 1M
   const [filterSector, setFilterSector] = useState('all');
+  const [priceContext, setPriceContext] = useState('all');
 
   const filteredStocks = useMemo(() => {
     return initialStocks
