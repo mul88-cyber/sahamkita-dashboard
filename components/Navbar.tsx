@@ -50,6 +50,12 @@ export default function Navbar() {
             <Link href="/" className="font-bold text-xl text-gray-900">
               📈 SahamKita
             </Link>
+            {/* 🆕 LAST UPDATED BADGE - TAMBAH INI SAJA */}
+            <span className="hidden md:inline-flex items-center">
+              <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 font-medium animate-pulse">
+                🟢 Live
+              </span>
+            </span>
             
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map(link => {
