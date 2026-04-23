@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
+import ShareButton from '@/components/ShareButton';  
 
 export const revalidate = 3600;
 
@@ -167,8 +168,8 @@ export default async function EmitenDetail({
                 <h1 className="text-3xl font-bold text-gray-900">
                   {stockCode}
                 </h1>
-                {/* 🆕 TOMBOL WATCHLIST */}
                 <AddToWatchlistButton stockCode={stockCode} />
+                <ShareButton stockCode={stockCode} title={`Cek analisis saham ${stockCode} di SahamKita!`} />
               </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <p className="text-gray-500">
