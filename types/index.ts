@@ -1,6 +1,5 @@
 // =============================================
-// types/index.ts
-// TypeScript type definitions untuk SahamKita
+// types/index.ts - UPDATED WITH NEW METRICS
 // =============================================
 
 export interface Stock {
@@ -14,7 +13,7 @@ export interface Stock {
   sector: string;
   trading_date: string;
   
-  // 🆕 METRIK WHALE DETECTION
+  // Whale Detection Metrics
   aov_ratio?: number;
   whale_signal?: boolean;
   split_signal?: boolean;
@@ -25,6 +24,21 @@ export interface Stock {
   foreign_buy?: number;
   foreign_sell?: number;
   free_float?: number;
+  
+  // 🆕 Orderbook Metrics
+  bid_volume?: number;
+  offer_volume?: number;
+  bid_offer_imbalance?: number;
+  
+  // 🆕 Crossing Nego Metrics
+  non_regular_value?: number;
+  non_regular_volume?: number;
+  non_regular_frequency?: number;
+  
+  // 🆕 Saham Ringan Metrics
+  listed_shares?: number;
+  tradeable_shares?: number;
+  tradeable_pct?: number;
 }
 
 export interface DashboardStats {
@@ -34,10 +48,37 @@ export interface DashboardStats {
   total_net_foreign: number;
   anomaly_count: number;
   
-  // 🆕 STATISTIK WHALE
+  // Whale Statistics
   top_whale?: Stock[] | null;
   whale_count?: number;
   split_count?: number;
+  
+  // 🆕 Crossing Nego Statistics
+  nego_crossing_count?: number;
+  total_nego_value?: number;
+}
+
+export interface OwnershipSummary {
+  institutional_pct: number;
+  retail_pct: number;
+  foreign_pct: number;
+  local_pct: number;
+  top_shareholder: string;
+  top_shareholder_pct: number;
+  top_shareholder_type: string;
+  total_shareholders: number;
+  report_date: string;
+  error?: boolean;
+  message?: string;
+}
+
+export interface Shareholder {
+  investor_name: string;
+  investor_type: string;
+  local_foreign: string;
+  nationality: string;
+  total_shares: number;
+  percentage: number;
 }
 
 export interface DashboardClientProps {
