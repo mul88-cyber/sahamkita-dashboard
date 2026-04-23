@@ -1,6 +1,7 @@
 // =============================================
 // components/DashboardClient.tsx
 // Client component untuk interaktivitas dashboard
+// DENGAN WHALE DETECTION UI
 // =============================================
 'use client';
 
@@ -66,10 +67,10 @@ export default function DashboardClient({
 
   const formatForeignFlow = (flow: number) => {
     const absValue = Math.abs(flow);
-    const formatted = absValue >= 1_000_000_000_000
-      ? `${(absValue / 1_000_000_000_000).toFixed(2)}T`
-      : absValue >= 1_000_000_000
-      ? `${(absValue / 1_000_000_000).toFixed(2)}M`
+    const formatted = absValue >= 1_000_000_000
+      ? `${(absValue / 1_000_000_000).toFixed(2)}B`
+      : absValue >= 1_000_000
+      ? `${(absValue / 1_000_000).toFixed(2)}M`
       : `${(absValue / 1_000_000).toFixed(2)}K`;
     return flow >= 0 ? `+${formatted}` : `-${formatted}`;
   };
@@ -97,10 +98,13 @@ export default function DashboardClient({
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* ============================================ */}
+        {/* STATS CARDS - 5 KOLOM (TERMASUK WHALE)       */}
+        {/* ============================================ */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {/* Total Net Foreign */}
           <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">Total Net Foreign Flow</p>
+            <p className="text-sm text-gray-500 mb-1">🌊 Total Net Foreign</p>
             <p className={`text-2xl font-bold ${
               initialStats.total_net_foreign >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
@@ -108,43 +112,106 @@ export default function DashboardClient({
             </p>
           </div>
           
+          {/* Anomali Big Player */}
           <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">Anomali Big Player</p>
+            <p className="text-sm text-gray-500 mb-1">⚡ Anomali Big Player</p>
             <p className="text-2xl font-bold text-orange-600">
               {initialStats.anomaly_count} Saham
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">Top Gainer</p>
-            {initialStats.top_gainer?.[0] && (
-              <>
-                <p className="text-lg font-semibold">
-                  {initialStats.top_gainer[0].stock_code}
-                </p>
-                <p className="text-green-600">
-                  +{initialStats.top_gainer[0].change_percent}%
-                </p>
-              </>
-            )}
+          {/* 🆕 WHALE DETECTION CARD */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow p-4 border-l-4 border-green-500">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🐋</span>
+              <p className="text-sm text-gray-600">Whale Detected</p>
+            </div>
+            <p className="text-2xl font-bold text-green-700">
+              {initialStats.whale_count || 0} Saham
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              AOV Ratio ≥ 1.5x
+            </p>
           </div>
 
+          {/* 🆕 SPLIT/RETAIL CARD */}
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg shadow p-4 border-l-4 border-red-500">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">⚡</span>
+              <p className="text-sm text-gray-600">Split/Retail</p>
+            </div>
+            <p className="text-2xl font-bold text-red-700">
+              {initialStats.split_count || 0} Saham
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              AOV Ratio ≤ 0.6x
+            </p>
+          </div>
+
+          {/* Total Saham */}
           <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">Top Volume</p>
-            {initialStats.top_volume?.[0] && (
-              <>
-                <p className="text-lg font-semibold">
-                  {initialStats.top_volume[0].stock_code}
-                </p>
-                <p className="text-blue-600">
-                  {formatVolume(initialStats.top_volume[0].volume)}
-                </p>
-              </>
-            )}
+            <p className="text-sm text-gray-500 mb-1">📊 Total Saham</p>
+            <p className="text-2xl font-bold text-gray-700">
+              {totalCount}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Hari Ini
+            </p>
           </div>
         </div>
 
-        {/* Filters */}
+        {/* ============================================ */}
+        {/* TOP WHALE SIGNALS SECTION                     */}
+        {/* ============================================ */}
+        {initialStats.top_whale && initialStats.top_whale.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">🐋</span>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Top Whale Signals (Akumulasi Big Player)
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              {initialStats.top_whale.map((stock, idx) => (
+                <Link 
+                  key={stock.stock_code}
+                  href={`/emiten/${stock.stock_code}`}
+                  className="block p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-gray-900">{stock.stock_code}</span>
+                    <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">
+                      #{idx + 1}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-700 mb-1">
+                    {stock.aov_ratio?.toFixed(2)}x
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">
+                      Score: {stock.conviction_score?.toFixed(0)}%
+                    </span>
+                    <span className={`font-medium ${
+                      (stock.change_percent ?? 0) > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {(stock.change_percent ?? 0) > 0 ? '+' : ''}{stock.change_percent?.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className="bg-green-500 h-1.5 rounded-full" 
+                      style={{ width: `${Math.min(stock.conviction_score || 0, 100)}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ============================================ */}
+        {/* FILTERS                                      */}
+        {/* ============================================ */}
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap gap-4 items-end">
             {/* Search */}
@@ -189,9 +256,11 @@ export default function DashboardClient({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Semua</option>
-                <option value="BUY">BUY</option>
-                <option value="SELL">SELL</option>
-                <option value="NEUTRAL">NEUTRAL</option>
+                <option value="Strong Akumulasi">Strong Akumulasi</option>
+                <option value="Akumulasi">Akumulasi</option>
+                <option value="Netral">Netral</option>
+                <option value="Distribusi">Distribusi</option>
+                <option value="Strong Distribusi">Strong Distribusi</option>
               </select>
             </div>
 
@@ -217,7 +286,9 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Table */}
+        {/* ============================================ */}
+        {/* TABLE - DENGAN KOLOM AOV RATIO               */}
+        {/* ============================================ */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -227,7 +298,8 @@ export default function DashboardClient({
                   <th className="px-4 py-3 text-right">Close</th>
                   <th className="px-4 py-3 text-right">Change %</th>
                   <th className="px-4 py-3 text-right">Volume</th>
-                  <th className="px-4 py-3 text-right">Foreign Flow</th>
+                  <th className="px-4 py-3 text-right">Foreign</th>
+                  <th className="px-4 py-3 text-center">🐋 AOV</th>
                   <th className="px-4 py-3 text-center">Sinyal</th>
                   <th className="px-4 py-3 text-left">Sektor</th>
                   <th className="px-4 py-3 text-center">Aksi</th>
@@ -236,61 +308,97 @@ export default function DashboardClient({
               <tbody>
                 {filteredStocks.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                       Tidak ada saham yang sesuai dengan filter
                     </td>
                   </tr>
                 ) : (
-                  filteredStocks.map((stock) => (
-                    <tr key={stock.stock_code} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium">
-                        <Link 
-                          href={`/emiten/${stock.stock_code}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {stock.stock_code}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono">
-                        {stock.close.toLocaleString()}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-medium ${
-                        stock.change_percent > 0 ? 'text-green-600' : 
-                        stock.change_percent < 0 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {stock.change_percent > 0 ? '+' : ''}{stock.change_percent}%
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatVolume(stock.volume)}
-                      </td>
-                      <td className={`px-4 py-3 text-right ${
-                        stock.net_foreign_flow > 0 ? 'text-green-600' : 
-                        stock.net_foreign_flow < 0 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {formatForeignFlow(stock.net_foreign_flow)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          stock.final_signal === 'BUY' ? 'bg-green-100 text-green-800' :
-                          stock.final_signal === 'SELL' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
+                  filteredStocks.map((stock) => {
+                    const aovRatio = stock.aov_ratio || 1.0;
+                    const isWhale = stock.whale_signal || aovRatio >= 1.5;
+                    const isSplit = stock.split_signal || (aovRatio <= 0.6 && aovRatio > 0);
+                    const convictionScore = stock.conviction_score || 50;
+                    
+                    return (
+                      <tr key={stock.stock_code} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-medium">
+                          <Link 
+                            href={`/emiten/${stock.stock_code}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {stock.stock_code}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">
+                          {formatCurrency(stock.close)}
+                        </td>
+                        <td className={`px-4 py-3 text-right font-medium ${
+                          stock.change_percent > 0 ? 'text-green-600' : 
+                          stock.change_percent < 0 ? 'text-red-600' : 'text-gray-600'
                         }`}>
-                          {stock.final_signal || 'NEUTRAL'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {stock.sector || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <Link
-                          href={`/emiten/${stock.stock_code}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Detail →
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
+                          {stock.change_percent > 0 ? '+' : ''}{stock.change_percent}%
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatVolume(stock.volume)}
+                        </td>
+                        <td className={`px-4 py-3 text-right ${
+                          stock.net_foreign_flow > 0 ? 'text-green-600' : 
+                          stock.net_foreign_flow < 0 ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {formatForeignFlow(stock.net_foreign_flow)}
+                        </td>
+                        
+                        {/* 🆕 KOLOM AOV RATIO */}
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {isWhale && <span className="text-green-600" title="Whale Signal">🐋</span>}
+                            {isSplit && <span className="text-red-600" title="Split Signal">⚡</span>}
+                            <span className={`font-medium ${
+                              isWhale ? 'text-green-700' : 
+                              isSplit ? 'text-red-700' : 
+                              'text-gray-600'
+                            }`}>
+                              {aovRatio.toFixed(2)}x
+                            </span>
+                          </div>
+                          {/* Conviction bar kecil */}
+                          <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                            <div 
+                              className={`h-1 rounded-full ${
+                                isWhale ? 'bg-green-500' : 
+                                isSplit ? 'bg-red-500' : 
+                                'bg-gray-400'
+                              }`}
+                              style={{ width: `${Math.min(convictionScore, 100)}%` }}
+                            />
+                          </div>
+                        </td>
+                        
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            stock.final_signal?.includes('Strong Akumulasi') ? 'bg-green-200 text-green-800' :
+                            stock.final_signal?.includes('Akumulasi') ? 'bg-green-100 text-green-700' :
+                            stock.final_signal?.includes('Strong Distribusi') ? 'bg-red-200 text-red-800' :
+                            stock.final_signal?.includes('Distribusi') ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {stock.final_signal || 'Netral'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {stock.sector || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Link
+                            href={`/emiten/${stock.stock_code}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Detail →
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
