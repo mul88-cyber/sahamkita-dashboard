@@ -439,7 +439,17 @@ export default function DashboardClient({
             </table>
           </div>
         </div>
-      </main>
-    </div>
-  );
-}
+              {/* 🆕 DISCLAIMER - TAMBAHKAN INI */}
+              <div className="text-center text-xs text-gray-400 py-4 mt-6">
+                <p>
+                  ⚠️ Data disajikan untuk tujuan informatif dan bukan merupakan rekomendasi investasi.
+                </p>
+                <p className="mt-1">
+                  Data transaksi diupdate setiap hari. Data kepemilikan diupdate setiap bulan dari KSEI.
+                </p>
+              </div>
+      
+            </main>
+          </div>
+        );
+      }
