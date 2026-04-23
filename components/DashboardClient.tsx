@@ -322,12 +322,47 @@ export default function DashboardClient({
                     return (
                       <tr key={stock.stock_code} className="border-b hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 font-medium">
-                          <Link 
-                            href={`/emiten/${stock.stock_code}`}
-                            className="text-blue-600 hover:underline"
-                          >
-                            {stock.stock_code}
-                          </Link>
+                          <div className="flex items-center gap-1">
+                            <Link 
+                              href={`/emiten/${stock.stock_code}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {stock.stock_code}
+                            </Link>
+                            
+                            {/* 🆕 Crossing Nego Badge */}
+                            {(() => {
+                              const negoValue = stock.non_regular_value || 0;
+                              const totalValue = stock.transaction_value || stock.value || 0;
+                              if (negoValue > totalValue * 0.1) {
+                                return (
+                                  <span 
+                                    className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded" 
+                                    title="Ada crossing nego besar (>10% total value)"
+                                  >
+                                    🏦
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                            
+                            {/* 🆕 Saham Ringan Badge */}
+                            {(() => {
+                              const tradeablePct = stock.tradeable_pct;
+                              if (tradeablePct && tradeablePct < 20) {
+                                return (
+                                  <span 
+                                    className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded" 
+                                    title="Saham ringan - mudah digerakkan (tradeable < 20%)"
+                                  >
+                                    💨
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-right font-mono">
                           {formatCurrency(stock.close)}
