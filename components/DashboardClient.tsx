@@ -333,7 +333,7 @@ export default function DashboardClient({
                             {/* 🆕 Crossing Nego Badge */}
                             {(() => {
                               const negoValue = stock.non_regular_value || 0;
-                              const totalValue = stock.transaction_value || stock.value || 0;
+                              const totalValue = stock.transaction_value || 0;  // ✅ PERBAIKAN: hapus stock.value
                               if (negoValue > totalValue * 0.1) {
                                 return (
                                   <span 
