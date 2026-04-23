@@ -39,6 +39,7 @@ export default function Navbar() {
     { href: '/', label: '📊 Dashboard' },
     { href: '/screener', label: '🔍 Screener' },
     { href: '/watchlist', label: '⭐ Watchlist', requiresAuth: true },
+    { href: '/pricing', label: '💎 Pricing' },  // 🆕 TAMBAH INI
   ];
 
   return (
