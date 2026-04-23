@@ -165,10 +165,19 @@ export default async function EmitenDetail({
               <h1 className="text-3xl font-bold text-gray-900">
                 {stockCode}
               </h1>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <p className="text-gray-500">
                   {latestData.sector || 'Sektor tidak tersedia'}
                 </p>
+                
+                {/* 🆕 LINK KE HALAMAN OWNERSHIP */}
+                <Link 
+                  href={`/emiten/${stockCode}/ownership`}
+                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                >
+                  📊 Lihat Kepemilikan →
+                </Link>
+                
                 {latestData.big_player_anomaly && (
                   <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
                     ⚡ Anomali Big Player
