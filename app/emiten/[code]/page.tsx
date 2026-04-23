@@ -382,7 +382,7 @@ export default async function EmitenDetail({
           <h2 className="text-lg font-semibold mb-4">
             📊 Pergerakan Harga & Volume (30 Hari Terakhir)
           </h2>
-          <StockChart data={chartData} />
+          <CandlestickChart data={chartData} height={500} showVolume={true} />
         </div>
 
         {/* ============================================ */}
