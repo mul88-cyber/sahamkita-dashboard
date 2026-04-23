@@ -1,60 +1,76 @@
-// app/page.tsx
-import { supabase } from '@/supabase'; // Sesuaikan dengan path file supabase Anda
+// app/page.tsx (VERSI OPTIMASI)
+import { supabase } from '@/supabase';
 import DashboardClient from '@/components/DashboardClient';
+import { Suspense } from 'react';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 
-// Memastikan Vercel selalu mengambil data terbaru secara dinamis (tidak di-cache selamanya)
-export const dynamic = 'force-dynamic';
+// Cache selama 1 jam (3600 detik)
+export const revalidate = 3600;
+
+// Type safety untuk data
+type StockData = {
+  stock_code: string;
+  close: number;
+  change_percent: number;
+  volume: number;
+  net_foreign_flow: number;
+  big_player_anomaly: boolean;
+  final_signal: string;
+  sector: string;
+};
 
 export default async function Dashboard() {
-  // 1. Ambil tanggal terbaru
-  const { data: latest } = await supabase
-    .from('daily_transactions')
-    .select('trading_date')
-    .order('trading_date', { ascending: false })
-    .limit(1);
-  
-  const latestDate = latest?.[0]?.trading_date || '';
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
 
-  // 2. Ambil semua data saham berdasarkan tanggal terbaru
-  const { data: stocksData, error } = await supabase
-    .from('daily_transactions')
-    .select('stock_code, close, change_percent, volume, net_foreign_flow, big_player_anomaly, final_signal, sector')
-    .eq('trading_date', latestDate);
+async function DashboardContent() {
+  try {
+    // OPTIMASI: Single query dengan CTE (Common Table Expression)
+    const { data, error } = await supabase.rpc('get_dashboard_data', {
+      p_limit: 500 // Batasi data yang di-fetch
+    });
 
-  if (error) {
-    console.error('Error fetching data from Supabase:', error);
+    if (error) throw error;
+
+    // Data sudah di-process di database level
+    const { 
+      stocks, 
+      stats, 
+      sectors,
+      latestDate 
+    } = data;
+
+    return (
+      <DashboardClient 
+        initialStocks={stocks} 
+        initialStats={stats} 
+        sectors={sectors} 
+        lastDate={latestDate} 
+      />
+    );
+  } catch (error) {
+    console.error('Dashboard error:', error);
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">Gagal memuat data dashboard.</div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Gagal memuat data
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Silakan refresh halaman atau coba beberapa saat lagi
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Refresh Halaman
+          </button>
+        </div>
       </div>
     );
   }
-
-  const stocks = stocksData || [];
-
-  // 3. Kalkulasi statistik DILAKUKAN DI SERVER untuk menghemat resource pengguna
-  const sortedByGain = [...stocks].sort((a, b) => b.change_percent - a.change_percent);
-  const sortedByVolume = [...stocks].sort((a, b) => b.volume - a.volume);
-  const totalNetForeign = stocks.reduce((sum, s) => sum + (s.net_foreign_flow || 0), 0);
-  const anomalyCount = stocks.filter(s => s.big_player_anomaly).length;
-
-  const stats = {
-    topGainer: sortedByGain.slice(0, 5),
-    topLoser: sortedByGain.slice(-5).reverse(),
-    topVolume: sortedByVolume.slice(0, 5),
-    totalNetForeign,
-    anomalyCount
-  };
-
-  const uniqueSectors = [...new Set(stocks.map(s => s.sector).filter(Boolean))];
-
-  // 4. Kirim data yang sudah bersih ke Client Component
-  return (
-    <DashboardClient 
-      initialStocks={stocks} 
-      initialStats={stats} 
-      sectors={uniqueSectors} 
-      lastDate={latestDate} 
-    />
-  );
 }
