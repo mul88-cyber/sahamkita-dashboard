@@ -48,7 +48,17 @@ export default async function ScreenerPage() {
   }
 
   // Hitung AOV Ratio untuk yang belum ada
-  const enrichedStocks = (stocks || []).map(stock => {
+    // 🆕 Fungsi Price Context
+  const getPriceContext = (changePercent: number, close: number, vwma20d: number): string => {
+    if (Math.abs(changePercent) <= 2.0) return 'Hidden Gem (Sideways)';
+    if (changePercent < 0 && close < vwma20d) return 'Bottom Fishing (Downtrend)';
+    if (changePercent < 0) return 'Downtrend';
+    if (changePercent > 0 && changePercent <= 4.0) return 'Early Move (Uptrend Awal)';
+    if (changePercent > 4.0) return 'Strong Uptrend';
+    return 'Normal';
+  };
+
+  const enrichedStocks = (stocks || []).map((stock: any) => {
     const avgOrderVol = stock.avg_order_volume || 0;
     const ma50 = stock.ma50_avg_order_volume || 1;
     const aovRatio = stock.aov_ratio || (ma50 > 0 ? avgOrderVol / ma50 : 1.0);
@@ -58,12 +68,18 @@ export default async function ScreenerPage() {
       (isWhale ? Math.min(99, ((aovRatio - 1.5) / 3.5) * 80 + 20) :
        isSplit ? Math.min(99, ((0.6 - aovRatio) / 0.6) * 80 + 20) : 50);
 
-    return {
-      ...stock,
-      aov_ratio: aovRatio,
-      whale_signal: isWhale,
-      split_signal: isSplit,
+    return { 
+      ...stock, 
+      aov_ratio: aovRatio, 
+      whale_signal: isWhale, 
+      split_signal: isSplit, 
       conviction_score: conviction,
+      // 🆕 Price Context
+      price_context: getPriceContext(
+        stock.change_percent || 0,
+        stock.close || 0,
+        stock.vwma_20d || 0
+      ),
     };
   });
 
