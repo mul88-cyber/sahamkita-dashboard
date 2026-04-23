@@ -1,6 +1,6 @@
 // =============================================
-// app/emiten/[kode]/page.tsx
-// VERSI SUPER SIMPLE - Hanya tampilkan data mentah
+// app/emiten/[code]/page.tsx
+// VERSI SUPER SIMPLE - Sesuai nama folder [code]
 // =============================================
 import { supabase } from '@/supabase';
 import Link from 'next/link';
@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
 export default async function EmitenDetail({ 
   params 
 }: { 
-  params: { kode: string } 
+  params: { code: string }  // ⬅️ PERUBAHAN: kode → code
 }) {
-  const stockCode = params.kode.toUpperCase();
+  const stockCode = params.code.toUpperCase();  // ⬅️ PERUBAHAN: kode → code
   
   console.log('Mencari saham:', stockCode);
   
