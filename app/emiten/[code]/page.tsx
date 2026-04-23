@@ -376,6 +376,138 @@ export default async function EmitenDetail({
         </div>
 
         {/* ============================================ */}
+        {/* ORDERBOOK IMBALANCE CARD (NEW!)              */}
+        {/* ============================================ */}
+        <div className="bg-white rounded-lg shadow p-5">
+          <h3 className="text-lg font-semibold mb-4">📊 Orderbook Analysis</h3>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <p className="text-sm text-gray-600">🟢 Bid Volume</p>
+              <p className="text-xl font-bold text-green-700">
+                {formatVolume(toNumber(latestData.bid_volume))}
+              </p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-3 text-center">
+              <p className="text-sm text-gray-600">🔴 Offer Volume</p>
+              <p className="text-xl font-bold text-red-700">
+                {formatVolume(toNumber(latestData.offer_volume))}
+              </p>
+            </div>
+          </div>
+          
+          {/* Imbalance Gauge */}
+          <div className="mb-3">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-green-600">🟢 Bid Dominant</span>
+              <span className="text-gray-500">⚖️ Seimbang</span>
+              <span className="text-red-600">🔴 Offer Dominant</span>
+            </div>
+            <div className="w-full bg-gradient-to-r from-green-500 via-gray-300 to-red-500 h-4 rounded-full relative">
+              {(() => {
+                const imbalance = toNumber(latestData.bid_offer_imbalance);
+                const position = ((imbalance + 1) / 2) * 100;
+                return (
+                  <div 
+                    className="absolute top-0 w-1 h-6 bg-black rounded-full -mt-1"
+                    style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                  />
+                );
+              })()}
+            </div>
+          </div>
+          
+          {/* Interpretasi Cerdas */}
+          {(() => {
+            const imbalance = toNumber(latestData.bid_offer_imbalance);
+            const priceChange = toNumber(latestData.change_percent);
+            
+            let interpretation = { signal: '', desc: '', color: '' };
+            
+            if (imbalance > 0.3 && priceChange < 0) {
+              interpretation = { 
+                signal: '🟢 Akumulasi Tersembunyi', 
+                desc: 'Harga turun tapi bid tebal → Bandar serok di bawah',
+                color: 'text-green-700 bg-green-50 border-green-200'
+              };
+            } else if (imbalance < -0.3 && priceChange > 0) {
+              interpretation = { 
+                signal: '🔴 Distribusi Tersembunyi', 
+                desc: 'Harga naik tapi offer tebal → Bandar jualan di atas',
+                color: 'text-red-700 bg-red-50 border-red-200'
+              };
+            } else if (imbalance > 0.5) {
+              interpretation = { 
+                signal: '🟢 Demand Kuat', 
+                desc: 'Antrean beli sangat dominan',
+                color: 'text-green-700 bg-green-50 border-green-200'
+              };
+            } else if (imbalance < -0.5) {
+              interpretation = { 
+                signal: '🔴 Supply Kuat', 
+                desc: 'Antrean jual sangat dominan',
+                color: 'text-red-700 bg-red-50 border-red-200'
+              };
+            } else {
+              interpretation = { 
+                signal: '⚖️ Seimbang', 
+                desc: 'Supply-Demand relatif seimbang',
+                color: 'text-gray-700 bg-gray-50 border-gray-200'
+              };
+            }
+            
+            return (
+              <div className={`mt-4 p-3 rounded-lg border ${interpretation.color}`}>
+                <p className="font-semibold">{interpretation.signal}</p>
+                <p className="text-sm mt-1">{interpretation.desc}</p>
+              </div>
+            );
+          })()}
+          
+          <div className="mt-3 text-sm text-gray-500 text-center">
+            Bid/Offer Imbalance: <span className="font-mono font-medium">
+              {toNumber(latestData.bid_offer_imbalance).toFixed(4)}
+            </span>
+          </div>
+        </div>
+        
+        {/* ============================================ */}
+        {/* CROSSING NEGO CARD (NEW!)                    */}
+        {/* ============================================ */}
+        {toNumber(latestData.non_regular_value) > 0 && (
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow p-5 border-l-4 border-purple-500">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">🏦</span>
+              <h3 className="text-lg font-semibold text-gray-900">Crossing Nego</h3>
+              {toNumber(latestData.non_regular_value) > toNumber(latestData.value) * 0.1 && (
+                <span className="ml-auto px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded-full font-medium">
+                  🔥 Large Crossing
+                </span>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Volume Nego</p>
+                <p className="text-xl font-semibold">{formatVolume(toNumber(latestData.non_regular_volume))}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Value Nego</p>
+                <p className="text-xl font-semibold">{formatVolume(toNumber(latestData.non_regular_value))}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Freq Nego</p>
+                <p className="text-xl font-semibold">{toNumber(latestData.non_regular_frequency)}x</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-3">
+              ℹ️ Crossing nego adalah transaksi di pasar negosiasi, sering digunakan bandar untuk tukar barang tanpa ganggu harga pasar.
+            </p>
+          </div>
+        )}
+
+        {/* ============================================ */}
         {/* CHART                                         */}
         {/* ============================================ */}
         <div className="bg-white rounded-lg shadow p-4">
