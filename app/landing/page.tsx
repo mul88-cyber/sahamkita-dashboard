@@ -77,6 +77,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Live Market Stats - TAMBAHKAN SECTION INI */}
+      <section className="py-12 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">📊 Market at a Glance</h2>
+            <p className="text-gray-600">Data real-time dari Bursa Efek Indonesia</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center shadow">
+              <p className="text-3xl font-bold text-blue-700">600+</p>
+              <p className="text-sm text-gray-600">Saham Tercakup</p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center shadow">
+              <p className="text-3xl font-bold text-green-700">🐋</p>
+              <p className="text-sm text-gray-600">Whale Detection</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center shadow">
+              <p className="text-3xl font-bold text-purple-700">🏦</p>
+              <p className="text-sm text-gray-600">Crossing Nego</p>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 text-center shadow">
+              <p className="text-3xl font-bold text-orange-700">🏛️</p>
+              <p className="text-sm text-gray-600">Ownership Data</p>
+            </div>
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 text-center shadow">
+              <p className="text-3xl font-bold text-indigo-700">Daily</p>
+              <p className="text-sm text-gray-600">Update Data</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
