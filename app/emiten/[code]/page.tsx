@@ -6,7 +6,7 @@ import { supabase } from '@/supabase';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import StockChart from '@/components/StockChart';
+import CandlestickChart from '@/components/CandlestickChart';
 
 export const revalidate = 3600;
 
@@ -73,7 +73,10 @@ export default async function EmitenDetail({
   
   // Data untuk chart
   const chartData = [...historyData].reverse().map(item => ({
-    trading_date: item.trading_date,
+    time: item.trading_date,  // Format: YYYY-MM-DD
+    open: toNumber(item.open_price) || toNumber(item.close) * 0.99, // Fallback
+    high: toNumber(item.high) || toNumber(item.close) * 1.01,
+    low: toNumber(item.low) || toNumber(item.close) * 0.98,
     close: toNumber(item.close),
     volume: toNumber(item.volume),
   }));
