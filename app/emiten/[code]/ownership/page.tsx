@@ -2,7 +2,7 @@
 // app/emiten/[code]/ownership/page.tsx
 // Halaman Detail Kepemilikan Saham
 // =============================================
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/supabase';  // ✅ PERBAIKAN: ganti dari @/lib/supabase
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -91,7 +91,7 @@ export default async function OwnershipPage({ params }: { params: { code: string
         {/* Shareholders Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-4 py-3 border-b">
-            <h3 className="font-semibold">📋 Daftar Pemegang Saham (>1%)</h3>
+            <h3 className="font-semibold">📋 Daftar Pemegang Saham ({'>'}1%)</h3>
             <p className="text-sm text-gray-500">Total: {summary.total_shareholders} pemegang saham</p>
           </div>
           <div className="overflow-x-auto">
