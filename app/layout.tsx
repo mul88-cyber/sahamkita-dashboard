@@ -1,8 +1,9 @@
 // =============================================
-// app/layout.tsx - SIDEBAR VERSION
+// app/layout.tsx - SIDEBAR + DARK MODE VERSION
 // =============================================
 import './globals.css'
 import type { Metadata } from 'next'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import Sidebar from '@/components/Sidebar'
 import TopBar from '@/components/TopBar'
 import Footer from '@/components/Footer'
@@ -31,13 +32,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="md:ml-16 transition-all duration-300 flex flex-col min-h-screen">
-          <TopBar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+      <body className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <ThemeProvider>
+          <Sidebar />
+          <div className="md:ml-16 transition-all duration-300 flex flex-col min-h-screen">
+            <TopBar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
