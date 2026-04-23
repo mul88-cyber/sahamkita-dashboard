@@ -55,13 +55,55 @@ async function DashboardContent() {
     }
 
     return (
-      <DashboardClient
-        initialStocks={response.stocks}
-        initialStats={response.stats}
-        sectors={response.sectors.filter(Boolean)}
-        lastDate={response.latestDate}
-        totalCount={response.totalCount}
-      />
+      <>
+        {/* 🆕 MARKET SUMMARY BAR - TAMBAHKAN INI */}
+        <div className="max-w-7xl mx-auto px-4 pt-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-4 border border-blue-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-center">
+              <div>
+                <p className="text-xs text-gray-500">Total Saham</p>
+                <p className="text-lg font-bold text-gray-900">{response.totalCount}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">🐋 Whale</p>
+                <p className="text-lg font-bold text-green-600">{response.stats.whale_count || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">⚡ Split</p>
+                <p className="text-lg font-bold text-red-600">{response.stats.split_count || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">🏦 Crossing</p>
+                <p className="text-lg font-bold text-purple-600">{response.stats.nego_crossing_count || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">⚡ Anomali</p>
+                <p className="text-lg font-bold text-orange-600">{response.stats.anomaly_count}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">📈 Gainers</p>
+                <p className="text-lg font-bold text-green-600">
+                  {response.stocks.filter((s: any) => s.change_percent > 0).length}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">📉 Losers</p>
+                <p className="text-lg font-bold text-red-600">
+                  {response.stocks.filter((s: any) => s.change_percent < 0).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <DashboardClient
+          initialStocks={response.stocks}
+          initialStats={response.stats}
+          sectors={response.sectors.filter(Boolean)}
+          lastDate={response.latestDate}
+          totalCount={response.totalCount}
+        />
+      </>
     );
     
   } catch (error) {
