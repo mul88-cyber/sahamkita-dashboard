@@ -8,7 +8,9 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
-import ShareButton from '@/components/ShareButton';  
+import ShareButton from '@/components/ShareButton';
+import { detectPatterns } from '@/lib/patterns';           
+import AccumulationScore from '@/components/AccumulationScore'; 
 
 export const revalidate = 3600;
 
@@ -82,6 +84,16 @@ export default async function EmitenDetail({
     close: toNumber(item.close),
     volume: toNumber(item.volume),
   }));
+
+  // 🆕 DETEKSI POLA CANDLESTICK
+  const patterns = detectPatterns(
+    historyData.slice(0, 5).reverse().map((item: any) => ({
+      open: toNumber(item.open_price) || toNumber(item.close),
+      high: toNumber(item.high) || toNumber(item.close),
+      low: toNumber(item.low) || toNumber(item.close),
+      close: toNumber(item.close),
+    }))
+  );
 
   // Hitung statistik 30 hari
   const closes = historyData.map(d => toNumber(d.close));
@@ -485,7 +497,52 @@ export default async function EmitenDetail({
             </span>
           </div>
         </div>
+
+        {/* ============================================ */}
+        {/* ACCUMULATION SCORE (NEW!)                    */}
+        {/* ============================================ */}
+        <AccumulationScore
+          whaleSignal={isWhale}
+          splitSignal={isSplit}
+          netForeignFlow={foreignFlowValue}
+          bidOfferImbalance={toNumber(latestData.bid_offer_imbalance)}
+          changePercent={changeValue}
+          volumeSpike={toNumber(latestData.volume_spike)}
+        />
         
+        {/* ============================================ */}
+        {/* CANDLESTICK PATTERNS (NEW!)                  */}
+        {/* ============================================ */}
+        {patterns.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="text-lg font-semibold mb-4">🕯️ Candlestick Pattern Detected</h2>
+            <div className="space-y-3">
+              {patterns.map((pattern, idx) => (
+                <div key={idx} className={`p-3 rounded-lg border ${
+                  pattern.type === 'bullish' ? 'bg-green-50 border-green-200' :
+                  pattern.type === 'bearish' ? 'bg-red-50 border-red-200' :
+                  'bg-gray-50 border-gray-200'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">
+                        {pattern.type === 'bullish' ? '🟢' : pattern.type === 'bearish' ? '🔴' : '⚪'} {pattern.name}
+                      </p>
+                      <p className="text-sm text-gray-600">{pattern.description}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      pattern.reliability === 'high' ? 'bg-yellow-100 text-yellow-800' :
+                      pattern.reliability === 'medium' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {pattern.reliability.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {/* ============================================ */}
         {/* CROSSING NEGO CARD (NEW!)                    */}
         {/* ============================================ */}
