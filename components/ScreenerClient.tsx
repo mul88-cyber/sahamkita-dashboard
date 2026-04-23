@@ -16,10 +16,11 @@ export default function ScreenerClient({ initialStocks, sectors, lastDate }: any
         if (mode === 'split' && !s.split_signal) return false;
         if (filterSector !== 'all' && s.sector !== filterSector) return false;
         if ((s.value || 0) < minValue) return false;
+        if (priceContext !== 'all' && s.price_context !== priceContext) return false; // 🆕
         return true;
       })
       .sort((a: any, b: any) => (b.conviction_score || 0) - (a.conviction_score || 0));
-  }, [initialStocks, mode, minValue, filterSector]);
+  }, [initialStocks, mode, minValue, filterSector, priceContext]); // 🆕 Tambah priceContext
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('id-ID', {
     style: 'currency', currency: 'IDR', minimumFractionDigits: 0
@@ -104,6 +105,21 @@ export default function ScreenerClient({ initialStocks, sectors, lastDate }: any
                 {sectors.map((s: string) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
+              </select>
+            </div>
+            {/* 🆕 Price Context Filter */}
+            <div>
+              <label className="block text-sm font-medium mb-1">📉 Price Context</label>
+              <select
+                value={priceContext}
+                onChange={(e) => setPriceContext(e.target.value)}
+                className="px-3 py-2 border rounded-lg"
+              >
+                <option value="all">Semua Fase</option>
+                <option value="Hidden Gem (Sideways)">💎 Hidden Gem</option>
+                <option value="Bottom Fishing (Downtrend)">⚓ Bottom Fishing</option>
+                <option value="Early Move (Uptrend Awal)">🚀 Early Move</option>
+                <option value="Strong Uptrend">📈 Strong Uptrend</option>
               </select>
             </div>
           </div>
