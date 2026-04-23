@@ -10,9 +10,21 @@ export interface Stock {
   volume: number;
   net_foreign_flow: number;
   big_player_anomaly: boolean;
-  final_signal: 'BUY' | 'SELL' | 'NEUTRAL' | string;
+  final_signal: string;
   sector: string;
   trading_date: string;
+  
+  // 🆕 METRIK WHALE DETECTION
+  aov_ratio?: number;
+  whale_signal?: boolean;
+  split_signal?: boolean;
+  conviction_score?: number;
+  avg_order_volume?: number;
+  ma50_avg_order_volume?: number;
+  transaction_value?: number;
+  foreign_buy?: number;
+  foreign_sell?: number;
+  free_float?: number;
 }
 
 export interface DashboardStats {
@@ -21,6 +33,11 @@ export interface DashboardStats {
   top_volume: Stock[] | null;
   total_net_foreign: number;
   anomaly_count: number;
+  
+  // 🆕 STATISTIK WHALE
+  top_whale?: Stock[] | null;
+  whale_count?: number;
+  split_count?: number;
 }
 
 export interface DashboardClientProps {
@@ -68,8 +85,8 @@ export interface PriceAlert {
   created_at: string;
 }
 
-// Helper type untuk format currency
 export type Currency = 'IDR' | 'USD';
+
 export type MarketSector = 
   | 'ENERGY' 
   | 'FINANCIAL' 
