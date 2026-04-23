@@ -1,5 +1,9 @@
+// =============================================
+// app/layout.tsx - UPDATED
+// =============================================
 import './globals.css'
 import type { Metadata } from 'next'
+import Navbar from '@/components/Navbar'
 
 export const metadata: Metadata = {
   title: 'SahamKita - Dashboard Kepemilikan Saham Indonesia',
@@ -13,7 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <Navbar />
+        {children}
+      </body>
     </html>
   )
 }
