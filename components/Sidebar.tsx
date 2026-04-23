@@ -35,8 +35,8 @@ export default function Sidebar() {
     {
       title: 'Analisis',
       items: [
-        { href: '/screener?mode=whale', label: '🐋 Whale Tracker', icon: '🐋' },
-        { href: '/screener?mode=crossing', label: '🏦 Crossing Nego', icon: '🏦' },
+        { href: '/top-whale', label: '🏆 Top Whale', icon: '🏆' },
+        { href: '/whale-tracker', label: '🐋 Whale Tracker', icon: '🐋' },
       ],
     },
     {
