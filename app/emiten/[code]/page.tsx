@@ -1,6 +1,6 @@
 // =============================================
 // app/emiten/[code]/page.tsx
-// VERSI FINAL - Full Feature dengan Whale Detection
+// VERSI FINAL - Full Feature dengan Semua Fitur Baru
 // =============================================
 import { supabase } from '@/supabase';
 import Link from 'next/link';
@@ -9,8 +9,8 @@ import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
 import ShareButton from '@/components/ShareButton';
-import { detectPatterns } from '@/lib/patterns';           
-import AccumulationScore from '@/components/AccumulationScore'; 
+import { detectPatterns } from '@/lib/patterns';
+import AccumulationScore from '@/components/AccumulationScore';
 
 export const revalidate = 3600;
 
@@ -34,10 +34,10 @@ export async function generateMetadata(
     };
   }
 
-  const changeEmoji = data.change_percent > 0 ? '📈' : data.change_percent < 0 ? '📉' : '➡️';
+  const changeEmoji = (data.change_percent || 0) > 0 ? '📈' : (data.change_percent || 0) < 0 ? '📉' : '➡️';
   
   return {
-    title: `${data.stock_code} ${changeEmoji} ${data.change_percent > 0 ? '+' : ''}${data.change_percent}% | SahamKita`,
+    title: `${data.stock_code} ${changeEmoji} ${(data.change_percent || 0) > 0 ? '+' : ''}${data.change_percent || 0}% | SahamKita`,
     description: `Analisis saham ${data.stock_code} sektor ${data.sector || 'Lainnya'}.`,
   };
 }
@@ -66,6 +66,20 @@ export default async function EmitenDetail({
     notFound();
   }
 
+  // 🆕 Fetch Foreign Streak
+  const { data: streakData } = await supabase.rpc('get_foreign_streak', {
+    p_stock_code: stockCode,
+    p_days: 90
+  });
+  const foreignStreak = streakData as any;
+
+  // 🆕 Fetch Whale Win-Rate
+  const { data: winrateData } = await supabase.rpc('get_whale_winrate', {
+    p_stock_code: stockCode,
+    p_days: 90
+  });
+  const winrate = winrateData as any;
+
   const latestData = historyData[0];
   
   // Helper function untuk konversi aman
@@ -77,15 +91,17 @@ export default async function EmitenDetail({
   
   // Data untuk chart
   const chartData = [...historyData].reverse().map(item => ({
-    time: item.trading_date,  // Format: YYYY-MM-DD
-    open: toNumber(item.open_price) || toNumber(item.close) * 0.99, // Fallback
+    time: item.trading_date ? String(item.trading_date).split('T')[0] : '',
+    open: toNumber(item.open_price) || toNumber(item.close) * 0.99,
     high: toNumber(item.high) || toNumber(item.close) * 1.01,
     low: toNumber(item.low) || toNumber(item.close) * 0.98,
     close: toNumber(item.close),
     volume: toNumber(item.volume),
+    typical_price: toNumber(item.typical_price) || (toNumber(item.high) + toNumber(item.low) + toNumber(item.close)) / 3,
+    vwma_20d: toNumber(item.vwma_20d),
   }));
 
-  // 🆕 DETEKSI POLA CANDLESTICK
+  // 🆕 Deteksi Pola Candlestick
   const patterns = detectPatterns(
     historyData.slice(0, 5).reverse().map((item: any) => ({
       open: toNumber(item.open_price) || toNumber(item.close),
@@ -138,11 +154,11 @@ export default async function EmitenDetail({
 
   const getSignalBg = (signal: string) => {
     const lower = signal?.toLowerCase() || '';
-    if (lower.includes('strong akumulasi')) return 'bg-green-200 text-green-800';
-    if (lower.includes('akumulasi')) return 'bg-green-100 text-green-700';
-    if (lower.includes('strong distribusi')) return 'bg-red-200 text-red-800';
-    if (lower.includes('distribusi')) return 'bg-red-100 text-red-700';
-    return 'bg-gray-100 text-gray-800';
+    if (lower.includes('strong akumulasi')) return 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200';
+    if (lower.includes('akumulasi')) return 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
+    if (lower.includes('strong distribusi')) return 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200';
+    if (lower.includes('distribusi')) return 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   };
 
   // Whale Detection Metrics
@@ -163,63 +179,67 @@ export default async function EmitenDetail({
      isSplit ? Math.min(99, ((0.6 - aovRatio) / 0.6) * 80 + 20) : 50);
   const freeFloat = toNumber(latestData.free_float);
 
+  // 🆕 Turnover Ratio
+  const turnoverRatio = (toNumber(latestData.volume) > 0 && toNumber(latestData.tradeable_shares) > 0)
+    ? (toNumber(latestData.volume) / toNumber(latestData.tradeable_shares)) * 100
+    : 0;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/" className="hover:text-blue-600">Dashboard</Link>
+          <nav className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-900 font-medium">{stockCode}</span>
+            <span className="text-gray-900 dark:text-white font-medium">{stockCode}</span>
           </nav>
           
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   {stockCode}
                 </h1>
                 <AddToWatchlistButton stockCode={stockCode} />
                 <ShareButton stockCode={stockCode} title={`Cek analisis saham ${stockCode} di SahamKita!`} />
               </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <p className="text-gray-500">
+                <p className="text-gray-500 dark:text-gray-400">
                   {latestData.sector || 'Sektor tidak tersedia'}
                 </p>
                 
-                {/* 🆕 LINK KE HALAMAN OWNERSHIP */}
                 <Link 
                   href={`/emiten/${stockCode}/ownership`}
-                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                  className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                 >
                   📊 Lihat Kepemilikan →
                 </Link>
                 
                 {latestData.big_player_anomaly && (
-                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
+                  <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded-full font-medium">
                     ⚡ Anomali Big Player
                   </span>
                 )}
                 {isWhale && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full font-medium">
                     🐋 Whale Detected
                   </span>
                 )}
                 {isSplit && (
-                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded-full font-medium">
                     ⚡ Split/Retail
                   </span>
                 )}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold dark:text-white">
                 {formatCurrency(closeValue)}
               </div>
               <div className={`text-lg font-medium ${
-                changeValue > 0 ? 'text-green-600' : 
-                changeValue < 0 ? 'text-red-600' : 'text-gray-600'
+                changeValue > 0 ? 'text-green-600 dark:text-green-400' : 
+                changeValue < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {changeValue > 0 ? '▲' : changeValue < 0 ? '▼' : '●'} 
                 {' '}{changeValue > 0 ? '+' : ''}{changeValue}%
@@ -236,69 +256,69 @@ export default async function EmitenDetail({
         {/* ============================================ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Volume */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">📊 Volume</p>
-            <p className="text-xl font-semibold">{formatVolume(volumeValue)}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">📊 Volume</p>
+            <p className="text-xl font-semibold dark:text-white">{formatVolume(volumeValue)}</p>
             {toNumber(latestData.volume_spike) > 2 && (
-              <p className="text-xs text-orange-600 mt-1">
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                 🔥 Spike {toNumber(latestData.volume_spike).toFixed(1)}x
               </p>
             )}
           </div>
           
           {/* Foreign Flow */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">💱 Foreign Flow</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">💱 Foreign Flow</p>
             <p className={`text-xl font-semibold ${
-              foreignFlowValue >= 0 ? 'text-green-600' : 'text-red-600'
+              foreignFlowValue >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {formatForeignFlow(foreignFlowValue)}
             </p>
           </div>
           
           {/* Foreign Buy */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">🟢 Foreign Buy</p>
-            <p className="text-xl font-semibold text-green-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🟢 Foreign Buy</p>
+            <p className="text-xl font-semibold text-green-600 dark:text-green-400">
               {formatVolume(foreignBuyValue)}
             </p>
           </div>
           
           {/* Foreign Sell */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">🔴 Foreign Sell</p>
-            <p className="text-xl font-semibold text-red-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🔴 Foreign Sell</p>
+            <p className="text-xl font-semibold text-red-600 dark:text-red-400">
               {formatVolume(foreignSellValue)}
             </p>
           </div>
 
-          {/* 🆕 AOV RATIO & WHALE DETECTION CARD */}
+          {/* AOV RATIO */}
           <div className={`rounded-lg shadow p-4 border-l-4 ${
-            isWhale ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-500' : 
-            isSplit ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-500' : 
-            'bg-white border-gray-300'
+            isWhale ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-500' : 
+            isSplit ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-red-500' : 
+            'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
           }`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">{isWhale ? '🐋' : isSplit ? '⚡' : '📊'}</span>
-              <p className="text-sm text-gray-600">AOV Ratio</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">AOV Ratio</p>
             </div>
             <p className={`text-xl font-semibold ${
-              isWhale ? 'text-green-700' : isSplit ? 'text-red-700' : 'text-gray-700'
+              isWhale ? 'text-green-700 dark:text-green-400' : isSplit ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
             }`}>
               {aovRatio.toFixed(2)}x
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {isWhale ? '🐋 Whale Detected' : isSplit ? '⚡ Split/Retail' : 'Normal Activity'}
             </p>
           </div>
 
-          {/* 🆕 CONVICTION SCORE CARD */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">🎯 Conviction</p>
-            <p className="text-xl font-semibold">
+          {/* CONVICTION SCORE */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🎯 Conviction</p>
+            <p className="text-xl font-semibold dark:text-white">
               {convictionScore.toFixed(0)}%
             </p>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
               <div 
                 className={`h-2 rounded-full ${
                   isWhale ? 'bg-green-500' : isSplit ? 'bg-red-500' : 'bg-blue-500'
@@ -309,26 +329,57 @@ export default async function EmitenDetail({
           </div>
         </div>
 
+        {/* 🆕 TURNOVER RATIO */}
+        <div className={`rounded-lg shadow p-4 border-l-4 ${
+          turnoverRatio > 10 ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-red-500' :
+          turnoverRatio > 5 ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border-yellow-500' :
+          'bg-white dark:bg-gray-800 border-blue-500'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">💧 Turnover Ratio</p>
+              <p className={`text-2xl font-bold mt-1 ${
+                turnoverRatio > 10 ? 'text-red-700 dark:text-red-400' :
+                turnoverRatio > 5 ? 'text-yellow-700 dark:text-yellow-400' :
+                'text-gray-700 dark:text-gray-300'
+              }`}>
+                {turnoverRatio.toFixed(2)}%
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {turnoverRatio > 10 ? '🔥 Sangat Panas' :
+                 turnoverRatio > 5 ? '🟡 Aktif' :
+                 turnoverRatio > 1 ? '🔵 Normal' :
+                 turnoverRatio > 0.1 ? '⚪ Sepi' : '💤 Tidur'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                dari {formatVolume(toNumber(latestData.tradeable_shares))} saham beredar
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* ============================================ */}
-        {/* RANGE 30 HARI & INFO TAMBAHAN                */}
+        {/* RANGE 30 HARI                                  */}
         {/* ============================================ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">📈 Highest (30H)</p>
-            <p className="text-xl font-semibold">{formatCurrency(stats.highest)}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">📈 Highest (30H)</p>
+            <p className="text-xl font-semibold dark:text-white">{formatCurrency(stats.highest)}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">📉 Lowest (30H)</p>
-            <p className="text-xl font-semibold">{formatCurrency(stats.lowest)}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">📉 Lowest (30H)</p>
+            <p className="text-xl font-semibold dark:text-white">{formatCurrency(stats.lowest)}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">📅 Avg Volume (30H)</p>
-            <p className="text-xl font-semibold">{formatVolume(stats.avgVolume)}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">📅 Avg Volume (30H)</p>
+            <p className="text-xl font-semibold dark:text-white">{formatVolume(stats.avgVolume)}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-500 mb-1">🌊 Total Foreign (30H)</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🌊 Total Foreign (30H)</p>
             <p className={`text-xl font-semibold ${
-              stats.totalForeignFlow >= 0 ? 'text-green-600' : 'text-red-600'
+              stats.totalForeignFlow >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {formatForeignFlow(stats.totalForeignFlow)}
             </p>
@@ -336,48 +387,157 @@ export default async function EmitenDetail({
         </div>
 
         {/* ============================================ */}
+        {/* 🌊 FOREIGN FLOW STREAK                        */}
+        {/* ============================================ */}
+        {foreignStreak && foreignStreak.streak_days > 0 && (
+          <div className={`rounded-lg shadow p-5 border-l-4 ${
+            foreignStreak.streak_type === 'buy' 
+              ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-500' 
+              : 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/30 border-red-500'
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {foreignStreak.streak_type === 'buy' ? '🔥 Foreign Buy Streak' : '🧊 Foreign Sell Streak'}
+                </p>
+                <p className={`text-3xl font-bold mt-1 ${
+                  foreignStreak.streak_type === 'buy' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+                }`}>
+                  {foreignStreak.streak_days} Hari Berturut-turut
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {foreignStreak.streak_type === 'buy' 
+                    ? 'Asing terus menerus membeli tanpa henti' 
+                    : 'Asing terus menerus menjual tanpa henti'}
+                </p>
+              </div>
+              <div className="text-right text-sm">
+                <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <span>🟢 Buy Days:</span>
+                    <span className="font-bold">{foreignStreak.total_buy_days}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mt-1">
+                    <span>🔴 Sell Days:</span>
+                    <span className="font-bold">{foreignStreak.total_sell_days}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    dalam {foreignStreak.period_days} hari terakhir
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================ */}
+        {/* 🎯 WHALE SIGNAL WIN-RATE                       */}
+        {/* ============================================ */}
+        {winrate && winrate.total_signals > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                🎯 Whale Signal Accuracy
+              </h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                {winrate.total_signals} sinyal dalam {winrate.period_days} hari
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="text-xs text-gray-500 dark:text-gray-400">T+1</p>
+                <p className={`text-2xl font-bold ${winrate.winrate_t1 >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.winrate_t1}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Win Rate</p>
+                <p className={`text-sm font-medium ${winrate.avg_return_t1 >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.avg_return_t1 >= 0 ? '+' : ''}{winrate.avg_return_t1}% Avg Return
+                </p>
+              </div>
+              
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">⭐ Recommended</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">T+3</p>
+                <p className={`text-2xl font-bold ${winrate.winrate_t3 >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.winrate_t3}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Win Rate</p>
+                <p className={`text-sm font-medium ${winrate.avg_return_t3 >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.avg_return_t3 >= 0 ? '+' : ''}{winrate.avg_return_t3}% Avg Return
+                </p>
+              </div>
+              
+              <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="text-xs text-gray-500 dark:text-gray-400">T+5</p>
+                <p className={`text-2xl font-bold ${winrate.winrate_t5 >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.winrate_t5}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Win Rate</p>
+                <p className={`text-sm font-medium ${winrate.avg_return_t5 >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {winrate.avg_return_t5 >= 0 ? '+' : ''}{winrate.avg_return_t5}% Avg Return
+                </p>
+              </div>
+            </div>
+            
+            {/* Badge */}
+            <div className="text-center">
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                winrate.winrate_t3 >= 60 
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                  : winrate.winrate_t3 >= 40 
+                  ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' 
+                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+              }`}>
+                {winrate.winrate_t3 >= 60 ? '🟢 High Accuracy - Sinyal Dapat Diandalkan' : 
+                 winrate.winrate_t3 >= 40 ? '🟡 Moderate Accuracy - Perlu Konfirmasi' : 
+                 '🔴 Low Accuracy - Sinyal Kurang Akurat'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================ */}
         {/* SINYAL CARD + WHALE DETAILS                  */}
         {/* ============================================ */}
-        <div className="bg-white rounded-lg shadow p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kiri: Sinyal Trading */}
             <div>
-              <p className="text-sm text-gray-500 mb-1">🎯 Sinyal Trading</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🎯 Sinyal Trading</p>
               <p className={`text-2xl font-bold ${getSignalColor(latestData.final_signal)}`}>
                 {latestData.final_signal || 'NEUTRAL'}
               </p>
-              <p className="text-sm text-gray-500 mt-2">Detail: {latestData.signal || '-'}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Detail: {latestData.signal || '-'}</p>
             </div>
             
-            {/* Kanan: Whale Metrics Detail */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Avg Order Volume</p>
-                <p className="text-lg font-semibold">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Avg Order Volume</p>
+                <p className="text-lg font-semibold dark:text-white">
                   {formatVolume(toNumber(latestData.avg_order_volume))}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">MA50 AOVol</p>
-                <p className="text-lg font-semibold">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">MA50 AOVol</p>
+                <p className="text-lg font-semibold dark:text-white">
                   {formatVolume(toNumber(latestData.ma50_avg_order_volume))}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Free Float</p>
-                <p className="text-lg font-semibold">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Free Float</p>
+                <p className="text-lg font-semibold dark:text-white">
                   {freeFloat > 0 ? `${freeFloat.toFixed(1)}%` : '-'}
                 </p>
                 {freeFloat > 0 && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {freeFloat < 10 ? '⚠️ Kering' : freeFloat > 40 ? '💧 Liquid' : 'Normal'}
                   </p>
                 )}
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Bid/Offer Imbalance</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Bid/Offer Imbalance</p>
                 <p className={`text-lg font-semibold ${
-                  toNumber(latestData.bid_offer_imbalance) > 0 ? 'text-green-600' : 'text-red-600'
+                  toNumber(latestData.bid_offer_imbalance) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                   {toNumber(latestData.bid_offer_imbalance).toFixed(4)}
                 </p>
@@ -385,66 +545,60 @@ export default async function EmitenDetail({
             </div>
           </div>
           
-          {/* Technical Indicators */}
-          <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-sm">
+          <div className="mt-4 pt-4 border-t dark:border-gray-700 grid grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">VWMA 20D</p>
-              <p className="font-medium">{formatCurrency(toNumber(latestData.vwma_20d))}</p>
+              <p className="text-gray-500 dark:text-gray-400">VWMA 20D</p>
+              <p className="font-medium dark:text-white">{formatCurrency(toNumber(latestData.vwma_20d))}</p>
             </div>
             <div>
-              <p className="text-gray-500">Value Transaksi</p>
-              <p className="font-medium">{formatVolume(toNumber(latestData.value))}</p>
+              <p className="text-gray-500 dark:text-gray-400">Value Transaksi</p>
+              <p className="font-medium dark:text-white">{formatVolume(toNumber(latestData.value))}</p>
             </div>
             <div>
-              <p className="text-gray-500">Frequency</p>
-              <p className="font-medium">{toNumber(latestData.frequency).toLocaleString('id-ID')}x</p>
+              <p className="text-gray-500 dark:text-gray-400">Frequency</p>
+              <p className="font-medium dark:text-white">{toNumber(latestData.frequency).toLocaleString('id-ID')}x</p>
             </div>
           </div>
         </div>
 
         {/* ============================================ */}
-        {/* ORDERBOOK IMBALANCE CARD (NEW!)              */}
+        {/* ORDERBOOK IMBALANCE CARD                     */}
         {/* ============================================ */}
-        <div className="bg-white rounded-lg shadow p-5">
-          <h3 className="text-lg font-semibold mb-4">📊 Orderbook Analysis</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Orderbook Analysis</h3>
           
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-green-50 rounded-lg p-3 text-center">
-              <p className="text-sm text-gray-600">🟢 Bid Volume</p>
-              <p className="text-xl font-bold text-green-700">
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">🟢 Bid Volume</p>
+              <p className="text-xl font-bold text-green-700 dark:text-green-400">
                 {formatVolume(toNumber(latestData.bid_volume))}
               </p>
             </div>
-            <div className="bg-red-50 rounded-lg p-3 text-center">
-              <p className="text-sm text-gray-600">🔴 Offer Volume</p>
-              <p className="text-xl font-bold text-red-700">
+            <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-3 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">🔴 Offer Volume</p>
+              <p className="text-xl font-bold text-red-700 dark:text-red-400">
                 {formatVolume(toNumber(latestData.offer_volume))}
               </p>
             </div>
           </div>
           
-          {/* Imbalance Gauge */}
           <div className="mb-3">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-green-600">🟢 Bid Dominant</span>
-              <span className="text-gray-500">⚖️ Seimbang</span>
-              <span className="text-red-600">🔴 Offer Dominant</span>
+              <span className="text-green-600 dark:text-green-400">🟢 Bid</span>
+              <span className="text-gray-500 dark:text-gray-400">⚖️</span>
+              <span className="text-red-600 dark:text-red-400">🔴 Offer</span>
             </div>
             <div className="w-full bg-gradient-to-r from-green-500 via-gray-300 to-red-500 h-4 rounded-full relative">
-              {(() => {
-                const imbalance = toNumber(latestData.bid_offer_imbalance);
-                const position = ((imbalance + 1) / 2) * 100;
-                return (
-                  <div 
-                    className="absolute top-0 w-1 h-6 bg-black rounded-full -mt-1"
-                    style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-                  />
-                );
-              })()}
+              <div 
+                className="absolute top-0 w-1 h-6 bg-black dark:bg-white rounded-full -mt-1"
+                style={{ 
+                  left: `${((toNumber(latestData.bid_offer_imbalance) + 1) / 2) * 100}%`,
+                  transform: 'translateX(-50%)'
+                }}
+              />
             </div>
           </div>
           
-          {/* Interpretasi Cerdas */}
           {(() => {
             const imbalance = toNumber(latestData.bid_offer_imbalance);
             const priceChange = toNumber(latestData.change_percent);
@@ -455,31 +609,31 @@ export default async function EmitenDetail({
               interpretation = { 
                 signal: '🟢 Akumulasi Tersembunyi', 
                 desc: 'Harga turun tapi bid tebal → Bandar serok di bawah',
-                color: 'text-green-700 bg-green-50 border-green-200'
+                color: 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800'
               };
             } else if (imbalance < -0.3 && priceChange > 0) {
               interpretation = { 
                 signal: '🔴 Distribusi Tersembunyi', 
                 desc: 'Harga naik tapi offer tebal → Bandar jualan di atas',
-                color: 'text-red-700 bg-red-50 border-red-200'
+                color: 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
               };
             } else if (imbalance > 0.5) {
               interpretation = { 
                 signal: '🟢 Demand Kuat', 
                 desc: 'Antrean beli sangat dominan',
-                color: 'text-green-700 bg-green-50 border-green-200'
+                color: 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800'
               };
             } else if (imbalance < -0.5) {
               interpretation = { 
                 signal: '🔴 Supply Kuat', 
                 desc: 'Antrean jual sangat dominan',
-                color: 'text-red-700 bg-red-50 border-red-200'
+                color: 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
               };
             } else {
               interpretation = { 
                 signal: '⚖️ Seimbang', 
                 desc: 'Supply-Demand relatif seimbang',
-                color: 'text-gray-700 bg-gray-50 border-gray-200'
+                color: 'text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
               };
             }
             
@@ -491,15 +645,15 @@ export default async function EmitenDetail({
             );
           })()}
           
-          <div className="mt-3 text-sm text-gray-500 text-center">
-            Bid/Offer Imbalance: <span className="font-mono font-medium">
+          <div className="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+            Bid/Offer Imbalance: <span className="font-mono font-medium dark:text-white">
               {toNumber(latestData.bid_offer_imbalance).toFixed(4)}
             </span>
           </div>
         </div>
 
         {/* ============================================ */}
-        {/* ACCUMULATION SCORE (NEW!)                    */}
+        {/* ACCUMULATION SCORE                           */}
         {/* ============================================ */}
         <AccumulationScore
           whaleSignal={isWhale}
@@ -509,31 +663,31 @@ export default async function EmitenDetail({
           changePercent={changeValue}
           volumeSpike={toNumber(latestData.volume_spike)}
         />
-        
+
         {/* ============================================ */}
-        {/* CANDLESTICK PATTERNS (NEW!)                  */}
+        {/* CANDLESTICK PATTERNS                         */}
         {/* ============================================ */}
         {patterns.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-4">🕯️ Candlestick Pattern Detected</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🕯️ Candlestick Pattern Detected</h2>
             <div className="space-y-3">
               {patterns.map((pattern, idx) => (
                 <div key={idx} className={`p-3 rounded-lg border ${
-                  pattern.type === 'bullish' ? 'bg-green-50 border-green-200' :
-                  pattern.type === 'bearish' ? 'bg-red-50 border-red-200' :
-                  'bg-gray-50 border-gray-200'
+                  pattern.type === 'bullish' ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' :
+                  pattern.type === 'bearish' ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800' :
+                  'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
                 }`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold dark:text-white">
                         {pattern.type === 'bullish' ? '🟢' : pattern.type === 'bearish' ? '🔴' : '⚪'} {pattern.name}
                       </p>
-                      <p className="text-sm text-gray-600">{pattern.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{pattern.description}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full ${
-                      pattern.reliability === 'high' ? 'bg-yellow-100 text-yellow-800' :
-                      pattern.reliability === 'medium' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
+                      pattern.reliability === 'high' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                      pattern.reliability === 'medium' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                      'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200'
                     }`}>
                       {pattern.reliability.toUpperCase()}
                     </span>
@@ -543,16 +697,17 @@ export default async function EmitenDetail({
             </div>
           </div>
         )}
+
         {/* ============================================ */}
-        {/* CROSSING NEGO CARD (NEW!)                    */}
+        {/* CROSSING NEGO CARD                           */}
         {/* ============================================ */}
         {toNumber(latestData.non_regular_value) > 0 && (
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow p-5 border-l-4 border-purple-500">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg shadow p-5 border-l-4 border-purple-500">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xl">🏦</span>
-              <h3 className="text-lg font-semibold text-gray-900">Crossing Nego</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Crossing Nego</h3>
               {toNumber(latestData.non_regular_value) > toNumber(latestData.value) * 0.1 && (
-                <span className="ml-auto px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded-full font-medium">
+                <span className="ml-auto px-2 py-1 bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 text-xs rounded-full font-medium">
                   🔥 Large Crossing
                 </span>
               )}
@@ -560,20 +715,20 @@ export default async function EmitenDetail({
             
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Volume Nego</p>
-                <p className="text-xl font-semibold">{formatVolume(toNumber(latestData.non_regular_volume))}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Volume Nego</p>
+                <p className="text-xl font-semibold dark:text-white">{formatVolume(toNumber(latestData.non_regular_volume))}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Value Nego</p>
-                <p className="text-xl font-semibold">{formatVolume(toNumber(latestData.non_regular_value))}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Value Nego</p>
+                <p className="text-xl font-semibold dark:text-white">{formatVolume(toNumber(latestData.non_regular_value))}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Freq Nego</p>
-                <p className="text-xl font-semibold">{toNumber(latestData.non_regular_frequency)}x</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Freq Nego</p>
+                <p className="text-xl font-semibold dark:text-white">{toNumber(latestData.non_regular_frequency)}x</p>
               </div>
             </div>
             
-            <p className="text-xs text-gray-500 mt-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
               ℹ️ Crossing nego adalah transaksi di pasar negosiasi, sering digunakan bandar untuk tukar barang tanpa ganggu harga pasar.
             </p>
           </div>
@@ -582,9 +737,9 @@ export default async function EmitenDetail({
         {/* ============================================ */}
         {/* CHART                                         */}
         {/* ============================================ */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-4">
-            📊 Pergerakan Harga & Volume (30 Hari Terakhir)
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            📊 Candlestick Chart (30 Hari Terakhir)
           </h2>
           <CandlestickChart data={chartData} height={500} showVolume={true} />
         </div>
@@ -592,23 +747,23 @@ export default async function EmitenDetail({
         {/* ============================================ */}
         {/* HISTORICAL TABLE                             */}
         {/* ============================================ */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-4 py-3 border-b">
-            <h3 className="font-semibold">📋 Data Historis</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="px-4 py-3 border-b dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white">📋 Data Historis</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left">Tanggal</th>
-                  <th className="px-4 py-3 text-right">Close</th>
-                  <th className="px-4 py-3 text-right">Chg %</th>
-                  <th className="px-4 py-3 text-right">Volume</th>
-                  <th className="px-4 py-3 text-right">F. Buy</th>
-                  <th className="px-4 py-3 text-right">F. Sell</th>
-                  <th className="px-4 py-3 text-right">Net F.</th>
-                  <th className="px-4 py-3 text-center">🐋 AOV</th>
-                  <th className="px-4 py-3 text-center">Sinyal</th>
+                  <th className="px-4 py-3 text-left dark:text-gray-200">Tanggal</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">Close</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">Chg %</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">Volume</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">F. Buy</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">F. Sell</th>
+                  <th className="px-4 py-3 text-right dark:text-gray-200">Net F.</th>
+                  <th className="px-4 py-3 text-center dark:text-gray-200">🐋 AOV</th>
+                  <th className="px-4 py-3 text-center dark:text-gray-200">Sinyal</th>
                 </tr>
               </thead>
               <tbody>
@@ -626,41 +781,41 @@ export default async function EmitenDetail({
                   const rowIsSplit = row.split_signal || (rowAovRatio <= 0.6 && rowAovRatio > 0);
                   
                   return (
-                    <tr key={row.trading_date || index} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        {row.trading_date ? new Date(row.trading_date).toLocaleDateString('id-ID', {
+                    <tr key={row.trading_date || index} className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
+                      <td className="px-4 py-3 dark:text-gray-300">
+                        {row.trading_date ? new Date(String(row.trading_date)).toLocaleDateString('id-ID', {
                           day: 'numeric',
                           month: 'short',
                         }) : '-'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono">
+                      <td className="px-4 py-3 text-right font-mono dark:text-gray-300">
                         {formatCurrency(rowClose)}
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${
-                        rowChange > 0 ? 'text-green-600' : 
-                        rowChange < 0 ? 'text-red-600' : 'text-gray-600'
+                        rowChange > 0 ? 'text-green-600 dark:text-green-400' : 
+                        rowChange < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
                       }`}>
                         {rowChange > 0 ? '+' : ''}{rowChange.toFixed(2)}%
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right dark:text-gray-300">
                         {formatVolume(toNumber(row.volume))}
                       </td>
-                      <td className="px-4 py-3 text-right text-green-600">
+                      <td className="px-4 py-3 text-right text-green-600 dark:text-green-400">
                         {formatVolume(rowForeignBuy)}
                       </td>
-                      <td className="px-4 py-3 text-right text-red-600">
+                      <td className="px-4 py-3 text-right text-red-600 dark:text-red-400">
                         {formatVolume(rowForeignSell)}
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${
-                        rowNetForeign >= 0 ? 'text-green-600' : 'text-red-600'
+                        rowNetForeign >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {formatForeignFlow(rowNetForeign)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          {rowIsWhale && <span className="text-green-600" title="Whale">🐋</span>}
-                          {rowIsSplit && <span className="text-red-600" title="Split">⚡</span>}
-                          <span className={rowIsWhale ? 'text-green-700 font-medium' : rowIsSplit ? 'text-red-700 font-medium' : ''}>
+                          {rowIsWhale && <span className="text-green-600 dark:text-green-400" title="Whale">🐋</span>}
+                          {rowIsSplit && <span className="text-red-600 dark:text-red-400" title="Split">⚡</span>}
+                          <span className={rowIsWhale ? 'text-green-700 dark:text-green-400 font-medium' : rowIsSplit ? 'text-red-700 dark:text-red-400 font-medium' : 'dark:text-gray-300'}>
                             {rowAovRatio.toFixed(2)}x
                           </span>
                         </div>
@@ -682,7 +837,7 @@ export default async function EmitenDetail({
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             ← Kembali ke Dashboard
           </Link>
