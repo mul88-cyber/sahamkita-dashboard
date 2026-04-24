@@ -1,5 +1,5 @@
 // =============================================
-// app/layout.tsx - SIDEBAR + DARK MODE VERSION
+// app/layout.tsx - FIXED
 // =============================================
 import './globals.css'
 import type { Metadata } from 'next'
@@ -32,6 +32,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <ThemeProvider>
           <Sidebar />
@@ -45,8 +51,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-other: {
-    'google-fonts': 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap',
-  },
-};
