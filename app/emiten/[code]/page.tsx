@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
+import DeepDiveChart from '@/components/DeepDiveChart';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
 import ShareButton from '@/components/ShareButton';
 import { detectPatterns } from '@/lib/patterns';
@@ -790,13 +791,42 @@ export default async function EmitenDetail({
         )}
 
         {/* ============================================ */}
-        {/* CHART                                         */}
+        {/* DEEP DIVE CHART (4 PANEL)                    */}
         {/* ============================================ */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            📊 Candlestick Chart (30 Hari Terakhir)
+            🔍 Deep Dive Analysis
           </h2>
-          <CandlestickChart data={chartData} height={500} showVolume={true} />
+          <DeepDiveChart data={chartData.map((item: any) => ({
+            ...item,
+            aov_ratio: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.aov_ratio || 1,
+            avg_order_volume: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.avg_order_volume || 0,
+            ma50_avg_order_volume: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.ma50_avg_order_volume || 0,
+            net_foreign_flow: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.net_foreign_flow || 0,
+            vwma_20d: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.vwma_20d || 0,
+            whale_signal: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.whale_signal || false,
+            split_signal: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.split_signal || false,
+            big_player_anomaly: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.big_player_anomaly || 0,
+            volume_spike: (historyData || []).find((h: any) => 
+              String(h.trading_date).split('T')[0] === item.time
+            )?.volume_spike || 0,
+          }))} height={800} />
         </div>
 
         {/* ============================================ */}
