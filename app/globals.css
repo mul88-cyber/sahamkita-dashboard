@@ -3,72 +3,97 @@
 @tailwind utilities;
 
 /* ============================================ */
-/* PREMIUM UI/UX - Compact Data Density         */
+/* PREMIUM UI/UX - SahamKita Terminal            */
 /* ============================================ */
 
-/* Font monospace untuk angka (look profesional) */
+/* Font monospace untuk angka (Quant look) */
 @layer base {
   .font-quant {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    letter-spacing: -0.5px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    letter-spacing: -0.3px;
+    font-feature-settings: "tnum";
+  }
+  
+  body {
+    @apply antialiased;
   }
 }
 
-/* Compact table */
+/* Compact data density */
 @layer components {
-  .table-compact th,
-  .table-compact td {
-    @apply px-2 py-1.5 text-xs;
+  .card-premium {
+    @apply bg-white dark:bg-gray-800/90 backdrop-blur rounded-lg border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow;
   }
   
-  .card-compact {
-    @apply p-3 rounded-lg;
+  .stat-value {
+    @apply font-quant font-bold tracking-tight;
   }
   
-  .stat-compact {
-    @apply text-sm font-semibold;
+  .stat-label {
+    @apply text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-medium;
   }
 }
 
-/* Gradient text untuk angka penting */
+/* Subtle gradient animations */
 @layer utilities {
-  .text-gradient-green {
-    background: linear-gradient(135deg, #10b981, #059669);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .bg-premium-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   }
   
-  .text-gradient-red {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+  .text-gradient-premium {
+    background: linear-gradient(135deg, #3b82f6, #2563eb, #1d4ed8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
-  .text-gradient-blue {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .border-premium {
+    border: 1px solid rgba(59, 130, 246, 0.15);
+  }
+  
+  .glow-green {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+  }
+  
+  .glow-red {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
   }
 }
 
-/* Pulse animation untuk live data */
-@keyframes pulse-subtle {
+/* Scrollbar premium */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* Animasi halus */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Pulse subtle */
+@keyframes pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
+  50% { opacity: 0.8; }
 }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
-}
-
-/* Glass morphism card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.dark .glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }
