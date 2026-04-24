@@ -26,16 +26,17 @@ export default function Sidebar() {
     {
       title: 'Pasar',
       items: [
-        { href: '/', label: 'Dashboard', icon: '📊' },
-        { href: '/screener', label: 'Screener', icon: '🔍' },
-        { href: '/heatmap', label: 'Heatmap', icon: '🗺️' },
-        { href: '/compare', label: 'Compare', icon: '⚖️' },
-        { href: '/market-breadth', label: 'Market Breadth', icon: '📈' },
+        { href: '/', label: '📊 Dashboard', icon: '📊' },
+        { href: '/screener', label: '🔍 Screener', icon: '🔍' },
+        { href: '/heatmap', label: '🗺️ Heatmap', icon: '🗺️' },
+        { href: '/compare', label: '⚖️ Compare', icon: '⚖️' },
       ],
     },
     {
-      title: 'Analisis',
+      title: 'Quant',
       items: [
+        { href: '/quant', label: '🧪 Quant Dashboard', icon: '🧪' },
+        { href: '/market-breadth', label: '📈 Market Breadth', icon: '📈' },
         { href: '/top-whale', label: '🏆 Top Whale', icon: '🏆' },
         { href: '/whale-tracker', label: '🐋 Whale Tracker', icon: '🐋' },
       ],
