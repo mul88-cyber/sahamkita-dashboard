@@ -45,3 +45,8 @@ export default function RootLayout({
     </html>
   )
 }
+
+other: {
+    'google-fonts': 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap',
+  },
+};
