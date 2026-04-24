@@ -5,7 +5,7 @@ import { supabase } from '@/supabase';
 import ScreenerClientV3 from '@/components/ScreenerClientV3';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // 30 menit
+export const revalidate = 1800;
 
 export default async function ScreenerPage({
   searchParams,
@@ -15,7 +15,6 @@ export default async function ScreenerPage({
   const mode = searchParams.mode || 'whale';
   const priceContext = searchParams.context || 'all';
   
-  // Default: 30 hari terakhir
   const endDate = searchParams.end || new Date().toISOString().split('T')[0];
   const defaultStart = new Date();
   defaultStart.setDate(defaultStart.getDate() - 30);
@@ -25,7 +24,7 @@ export default async function ScreenerPage({
     p_start_date: startDate,
     p_end_date: endDate,
     p_mode: mode,
-    p_min_avg_value: 1000000000, // 1M
+    p_min_avg_value: 1000000000,
     p_min_price: 0,
     p_min_signals: 1,
     p_min_turnover: 0.5,
