@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Stock, DashboardStats, DashboardClientProps } from '@/types';
 
 export default function DashboardClient({ 
@@ -16,6 +17,11 @@ export default function DashboardClient({
   lastDate,
   totalCount 
 }: DashboardClientProps) {
+  const router = useRouter();
+  
+  // State untuk quick search (Enter → Detail)
+  const [quickSearch, setQuickSearch] = useState('');
+  
   // State untuk filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAnomaly, setFilterAnomaly] = useState(false);
@@ -214,19 +220,27 @@ export default function DashboardClient({
         {/* ============================================ */}
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap gap-4 items-end">
-            {/* Search */}
-            <div className="flex-1 min-w-[200px]">
+                        {/* 🔍 QUICK SEARCH - Enter langsung ke detail */}
+            <form 
+              onSubmit={(e) => { 
+                e.preventDefault(); 
+                if (quickSearch.trim()) {
+                  router.push(`/emiten/${quickSearch.toUpperCase().trim()}`);
+                }
+              }} 
+              className="flex-1 min-w-[200px]"
+            >
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                🔍 Cari Kode Saham
+                🔍 Cari Kode Saham (Enter → Detail)
               </label>
               <input
                 type="text"
-                placeholder="Contoh: BBCA, TLKM, ASII"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
+                placeholder="Ketik kode lalu Enter... (BBCA, TLKM, ASII)"
+                value={quickSearch}
+                onChange={(e) => setQuickSearch(e.target.value.toUpperCase())}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-            </div>
+            </form>
 
             {/* Sector Filter */}
             <div className="min-w-[150px]">
