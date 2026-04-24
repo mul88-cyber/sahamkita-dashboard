@@ -26,10 +26,11 @@ export default function Sidebar() {
     {
       title: 'Pasar',
       items: [
-        { href: '/', label: '📊 Dashboard', icon: '📊' },
-        { href: '/screener', label: '🔍 Screener', icon: '🔍' },
-        { href: '/heatmap', label: '🗺️ Heatmap', icon: '🗺️' },
-        { href: '/compare', label: '⚖️ Compare', icon: '⚖️' },
+        { href: '/', label: 'Dashboard', icon: '📊' },
+        { href: '/screener', label: 'Screener', icon: '🔍' },
+        { href: '/heatmap', label: 'Heatmap', icon: '🗺️' },
+        { href: '/compare', label: 'Compare', icon: '⚖️' },
+        { href: '/market-map', label: 'Market Map', icon: '🗺️' },
       ],
     },
     {
