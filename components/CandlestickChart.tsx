@@ -87,7 +87,7 @@ export default function CandlestickChart({
     if (spikeData.length > 0) {
       const markers = chart.addLineSeries({
         color: 'rgba(255, 215, 0, 0.9)',
-        lineWidth: 0,
+        lineVisible: false,                    // ✅ BENAR
         lastValueVisible: false,
         priceLineVisible: false,
         title: '⭐ AOVol Spike',
