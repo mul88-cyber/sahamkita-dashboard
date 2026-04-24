@@ -68,14 +68,16 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-30 h-full bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300
-        ${collapsed ? '-translate-x-full md:translate-x-0 md:w-16' : 'translate-x-0 w-64'}
+        fixed top-0 left-0 z-30 h-full bg-premium-gradient text-gray-100 transition-all duration-300
+        border-r border-gray-700/50
+        ${collapsed ? '-translate-x-full md:translate-x-0 md:w-[56px]' : 'translate-x-0 w-60'}
       `}>
         {/* Logo */}
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-700 dark:border-gray-800">
           {!collapsed && (
-            <Link href="/" className="font-bold text-lg">
-              📈 SahamKita
+            <Link href="/" className="font-bold text-base tracking-tight flex items-center gap-2">
+              <span className="text-xl">🐋</span>
+              <span className="text-gradient-premium font-extrabold">SahamKita</span>
             </Link>
           )}
           <button
@@ -91,7 +93,7 @@ export default function Sidebar() {
           {menuGroups.map((group) => (
             <div key={group.title} className="mb-1">
               {!collapsed && (
-                <p className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">
                   {group.title}
                 </p>
               )}
@@ -102,15 +104,15 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={`
-                      flex items-center gap-3 px-4 py-2.5 text-sm transition-colors
+                      flex items-center gap-3 px-3 py-2 my-0.5 text-[13px] rounded-md transition-all duration-200
                       ${isActive(item.href) 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-blue-600/30 text-white border-l-2 border-blue-400 font-medium' 
+                        : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 border-l-2 border-transparent'
                       }
                     `}
                     title={collapsed ? item.label : undefined}
                   >
-                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-base">{item.icon}</span>
                     {!collapsed && <span>{item.label}</span>}
                   </Link>
                 );
