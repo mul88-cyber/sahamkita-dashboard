@@ -80,58 +80,22 @@ export default function CandlestickChart({
     candlestickSeries.setData(data);
 
     // ============================================
-    // 2. VOLUME SERIES (Optional)
+    // 🆕 AOVol SPIKES MARKERS (BINTANG EMAS)
     // ============================================
-    if (showVolume && data[0]?.volume !== undefined) {
-      const volumeSeries = chart.addHistogramSeries({
-        color: '#93c5fd',
-        priceFormat: { type: 'volume' },
-        priceScaleId: 'volume',
-      });
-
-      chart.priceScale('volume').applyOptions({
-        scaleMargins: { top: 0.8, bottom: 0 },
-      });
-
-      volumeSeries.setData(data.map(item => ({
-        time: item.time,
-        value: item.volume || 0,
-        color: item.close >= item.open ? '#00cc3366' : '#ff444466',
-      })));
-    }
-
-    // ============================================
-    // 3. 🆕 TYPICAL PRICE LINE (Biru Putus-putus)
-    // ============================================
-    if (data[0]?.typical_price !== undefined) {
-      const typicalPriceSeries = chart.addLineSeries({
-        color: '#3b82f6',      // Biru
-        lineWidth: 1,
-        lineStyle: 2,          // Putus-putus
-        title: 'Typical Price',
-        priceScaleId: 'right',
+    const spikeData = data.filter((item: any) => (item.aov_ratio || 0) >= 1.5);
+    
+    if (spikeData.length > 0) {
+      const markers = chart.addLineSeries({
+        color: 'rgba(255, 215, 0, 0.9)',
+        lineWidth: 0,
+        lastValueVisible: false,
+        priceLineVisible: false,
+        title: '⭐ AOVol Spike',
       });
       
-      typicalPriceSeries.setData(data.map(item => ({
+      markers.setData(spikeData.map((item: any) => ({
         time: item.time,
-        value: item.typical_price || (item.high + item.low + item.close) / 3, // Fallback
-      })));
-    }
-
-    // ============================================
-    // 4. 🆕 VWMA 20D LINE (Orange Solid)
-    // ============================================
-    if (data[0]?.vwma_20d !== undefined) {
-      const vwmaSeries = chart.addLineSeries({
-        color: '#f59e0b',      // Orange
-        lineWidth: 2,
-        title: 'VWMA 20D',
-        priceScaleId: 'right',
-      });
-      
-      vwmaSeries.setData(data.map(item => ({
-        time: item.time,
-        value: item.vwma_20d,
+        value: item.high * 1.03,
       })));
     }
 
