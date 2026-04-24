@@ -359,6 +359,61 @@ export default async function EmitenDetail({
             </div>
           </div>
         </div>
+        
+        {/* 📊 Z-SCORE VOLUME ANOMALY */}
+        {(() => {
+          const volumeSpike = toNumber(latestData.volume_spike);
+          const ma20Vol = toNumber(latestData.ma20_volume);
+          const currentVol = toNumber(latestData.volume);
+          
+          const estimatedStd = ma20Vol * 0.5;
+          const zScore = estimatedStd > 0 ? (currentVol - ma20Vol) / estimatedStd : 0;
+          
+          return (
+            <div className={`rounded-lg shadow p-4 border-l-4 ${
+              zScore > 3 ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-red-500' :
+              zScore > 2 ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border-yellow-500' :
+              'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">📊 Volume Z-Score</p>
+                  <p className={`text-2xl font-bold mt-1 ${
+                    zScore > 3 ? 'text-red-700 dark:text-red-400' :
+                    zScore > 2 ? 'text-yellow-700 dark:text-yellow-400' :
+                    'text-green-700 dark:text-green-400'
+                  }`}>
+                    {zScore > 0 ? '+' : ''}{zScore.toFixed(1)}σ
+                  </p>
+                </div>
+                <div className="text-right text-xs">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Volume: {formatVolume(currentVol)}
+                  </p>
+                  <p className="text-gray-400 mt-1">
+                    MA20: {formatVolume(ma20Vol)}
+                  </p>
+                  <p className="text-gray-400">
+                    Spike: {volumeSpike.toFixed(1)}x
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 text-xs">
+                <span className={`px-2 py-1 rounded-full font-medium ${
+                  zScore > 3 ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                  zScore > 2 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                  'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                }`}>
+                  {zScore > 3 ? '🔥 Extreme Anomaly (+3σ)' :
+                   zScore > 2 ? '⚠️ Significant (+2σ)' :
+                   zScore > 1 ? '📈 Above Normal (+1σ)' :
+                   zScore > -1 ? '✅ Normal Range' :
+                   '📉 Below Normal'}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ============================================ */}
         {/* RANGE 30 HARI                                  */}
