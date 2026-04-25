@@ -1,49 +1,56 @@
-// =============================================
-// components/Footer.tsx
-// Footer untuk semua halaman
-// =============================================
 import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-bold text-lg mb-3">📈 SahamKita</h3>
-            <p className="text-sm text-gray-600">
-              Platform Bandarmologi Intelligence untuk analisis saham Indonesia.
-            </p>
+    <footer
+      className="mt-auto"
+      style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-surface)' }}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+
+          {/* Brand */}
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center font-mono"
+              style={{ background: 'linear-gradient(135deg, #00d2a0, #00c4ff)', color: '#080d14' }}
+            >
+              SK
+            </div>
+            <div>
+              <p className="text-[12px] font-bold text-gradient-accent">SahamKita</p>
+              <p className="text-[9px] uppercase tracking-widest" style={{ color: 'var(--color-text-ghost)' }}>
+                Bandarmologi Intelligence
+              </p>
+            </div>
           </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Fitur</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="/" className="hover:text-blue-600">Dashboard</Link></li>
-              <li><Link href="/screener" className="hover:text-blue-600">Screener</Link></li>
-              <li><Link href="/watchlist" className="hover:text-blue-600">Watchlist</Link></li>
-            </ul>
+
+          {/* Nav links */}
+          <div className="flex items-center gap-5 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            {[
+              { href: '/', label: 'Dashboard' },
+              { href: '/screener', label: 'Screener' },
+              { href: '/heatmap', label: 'Heatmap' },
+              { href: '/pricing', label: 'Pricing' },
+              { href: 'mailto:admin@sahamkita.com', label: 'Kontak' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="footer-nav-link uppercase tracking-wider font-medium transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Perusahaan</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="/pricing" className="hover:text-blue-600">Pricing</Link></li>
-              <li><a href="mailto:admin@sahamkita.com" className="hover:text-blue-600">Kontak</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Disclaimer</h4>
-            <p className="text-xs text-gray-500">
-              SahamKita tidak bertanggung jawab atas keputusan investasi. 
-              Data yang disajikan bersifat informatif dan bukan rekomendasi beli/jual.
-            </p>
-          </div>
-        </div>
-        
-        <div className="border-t mt-8 pt-4 text-center text-sm text-gray-500">
-          © 2026 SahamKita. All rights reserved.
+
+          {/* Copyright + disclaimer */}
+          <p
+            className="text-[10px] text-center md:text-right leading-relaxed"
+            style={{ color: 'var(--color-text-ghost)' }}
+          >
+            &copy; 2026 SahamKita. Bukan rekomendasi investasi.
+          </p>
         </div>
       </div>
     </footer>
