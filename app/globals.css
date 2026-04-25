@@ -193,6 +193,46 @@
     color: var(--color-text-muted);
   }
 
+  /* ---- TopBar nav links ---- */
+  .topbar-nav-link {
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+  }
+  .topbar-nav-link:hover {
+    background: var(--color-bg-elevated);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  .topbar-whale-link {
+    border: 1px solid transparent;
+  }
+  .topbar-whale-link:hover {
+    background: var(--color-whale-dim);
+    border-color: rgba(0, 196, 255, 0.2);
+  }
+
+  .topbar-neutral-link {
+    border: 1px solid transparent;
+  }
+  .topbar-neutral-link:hover {
+    background: var(--color-neutral-dim);
+    border-color: rgba(240, 180, 41, 0.2);
+  }
+
+  .topbar-icon-btn {
+    color: var(--color-text-muted);
+  }
+  .topbar-icon-btn:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+  }
+
+  /* ---- Whale card hover ---- */
+  .whale-card:hover {
+    border-color: rgba(0, 196, 255, 0.35) !important;
+  }
+
   /* ---- Input ---- */
   .input-terminal {
     background: var(--color-bg-elevated);

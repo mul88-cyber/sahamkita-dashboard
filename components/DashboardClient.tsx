@@ -130,10 +130,8 @@ function StockRow({
   return (
     <Link
       href={`/emiten/${stock.stock_code}`}
-      className="flex items-center gap-3 px-4 py-2.5 transition-all group"
+      className="flex items-center gap-3 px-4 py-2.5 transition-all group hover:bg-elevated"
       style={{ borderBottom: '1px solid var(--color-border)' }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-elevated)'; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
     >
       {/* Rank */}
       <span
@@ -179,16 +177,8 @@ function WhaleCard({ stock, rank }: { stock: any; rank: number }) {
   return (
     <Link
       href={`/emiten/${stock.stock_code}`}
-      className="card p-3.5 flex flex-col gap-2 group transition-all"
+      className="card whale-card p-3.5 flex flex-col gap-2 group transition-all hover:bg-elevated"
       style={{ borderColor: 'rgba(0,196,255,0.15)' }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,196,255,0.35)';
-        (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-elevated)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,196,255,0.15)';
-        (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-surface)';
-      }}
     >
       <div className="flex items-center justify-between">
         <span
@@ -433,10 +423,8 @@ export default function DashboardClient({
 
             <Link
               href="/screener"
-              className="flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold uppercase tracking-wider transition-all"
+              className="flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold uppercase tracking-wider transition-all hover:text-accent"
               style={{ color: 'var(--color-text-muted)', background: 'var(--color-bg-elevated)', borderTop: '1px solid var(--color-border)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'; }}
             >
               Lihat semua di Screener <IconChevronRight />
             </Link>
@@ -448,10 +436,8 @@ export default function DashboardClient({
               <p className="section-heading">Whale Signals</p>
               <Link
                 href="/whale-tracker"
-                className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1 transition-all hover:opacity-70"
                 style={{ color: 'var(--color-whale)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.7'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
               >
                 All Signals <IconChevronRight />
               </Link>
@@ -523,15 +509,7 @@ export default function DashboardClient({
             <Link
               key={item.href}
               href={item.href}
-              className="card px-4 py-3 flex items-center justify-between group transition-all"
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = item.color.replace('var(--color-', 'rgba(').replace(')', ', 0.4)');
-                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-elevated)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-surface)';
-              }}
+              className="card px-4 py-3 flex items-center justify-between group transition-all hover:bg-elevated"
             >
               <div>
                 <p className="text-[12px] font-bold" style={{ color: item.color }}>{item.label}</p>

@@ -115,18 +115,7 @@ export default function TopBar() {
       <div className="flex items-center gap-1">
         <Link
           href="/screener"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all"
-          style={{ color: 'var(--color-text-muted)', border: '1px solid transparent' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-elevated)';
-            (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-            (e.currentTarget as HTMLElement).style.color = 'var(--color-text-primary)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)';
-          }}
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all topbar-nav-link"
         >
           <IconScreener />
           <span className="uppercase tracking-wider">Screener</span>
@@ -134,16 +123,8 @@ export default function TopBar() {
 
         <Link
           href="/whale-tracker"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all"
-          style={{ color: 'var(--color-whale)', border: '1px solid transparent' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--color-whale-dim)';
-            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,196,255,0.2)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-          }}
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all topbar-whale-link"
+          style={{ color: 'var(--color-whale)' }}
         >
           <IconWhale />
           <span className="uppercase tracking-wider">Whale</span>
@@ -151,16 +132,8 @@ export default function TopBar() {
 
         <Link
           href="/watchlist"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all"
-          style={{ color: 'var(--color-neutral)', border: '1px solid transparent' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--color-neutral-dim)';
-            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,180,41,0.2)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-          }}
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all topbar-neutral-link"
+          style={{ color: 'var(--color-neutral)' }}
         >
           <IconStar />
           <span className="uppercase tracking-wider">Watchlist</span>
@@ -172,16 +145,7 @@ export default function TopBar() {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-md transition-all"
-          style={{ color: 'var(--color-text-muted)' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-elevated)';
-            (e.currentTarget as HTMLElement).style.color = 'var(--color-text-primary)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)';
-          }}
+          className="p-2 rounded-md transition-all topbar-icon-btn"
           title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           aria-label="Toggle theme"
         >
