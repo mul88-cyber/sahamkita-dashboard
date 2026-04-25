@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
-import DeepDiveChart from '@/components/DeepDiveChart';
+import DeepDiveECharts from '@/components/DeepDiveECharts';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
 import ShareButton from '@/components/ShareButton';
 import { detectPatterns } from '@/lib/patterns';
@@ -790,12 +790,9 @@ export default async function EmitenDetail({
           </div>
         )}
 
-        {/* DEEP DIVE CHART (4 PANEL) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            🔍 Deep Dive Analysis • {historyData.length} periode
-          </h2>
-          <DeepDiveChart 
+        {/* DEEP DIVE ECHARTS (4 PANEL LINKED) */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <DeepDiveECharts 
             data={[...historyData].reverse().map((item: any) => ({
               time: String(item.trading_date).split('T')[0],
               open: toNumber(item.open_price) || toNumber(item.close) * 0.99,
@@ -804,16 +801,13 @@ export default async function EmitenDetail({
               close: toNumber(item.close),
               volume: toNumber(item.volume),
               aov_ratio: toNumber(item.aov_ratio) || 1,
-              avg_order_volume: toNumber(item.avg_order_volume),
-              ma50_avg_order_volume: toNumber(item.ma50_avg_order_volume),
-              net_foreign_flow: toNumber(item.net_foreign_value || item.net_foreign_flow),
+              net_foreign_value: toNumber(item.net_foreign_value),
+              net_foreign_flow: toNumber(item.net_foreign_flow),
               vwma_20d: toNumber(item.vwma_20d),
               whale_signal: item.whale_signal || false,
               split_signal: item.split_signal || false,
               big_player_anomaly: toNumber(item.big_player_anomaly) || 0,
-              volume_spike: toNumber(item.volume_spike),
             }))} 
-            height={800} 
           />
         </div>
 
