@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import CandlestickChart from '@/components/CandlestickChart';
-import DeepDiveECharts from '@/components/DeepDiveECharts';
+import DeepDivePlotly from '@/components/DeepDivePlotly';
 import AddToWatchlistButton from '@/components/AddToWatchlistButton';
 import ShareButton from '@/components/ShareButton';
 import { detectPatterns } from '@/lib/patterns';
@@ -792,7 +792,7 @@ export default async function EmitenDetail({
 
         {/* DEEP DIVE ECHARTS (4 PANEL LINKED) */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <DeepDiveECharts 
+          <DeepDivePlotly 
             data={[...historyData].reverse().map((item: any) => ({
               time: String(item.trading_date).split('T')[0],
               open: toNumber(item.open_price) || toNumber(item.close) * 0.99,
