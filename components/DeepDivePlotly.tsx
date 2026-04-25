@@ -7,7 +7,6 @@
 import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
-// Dynamic import untuk Plotly (hindari SSR error)
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 interface DeepDiveData {
@@ -23,9 +22,6 @@ interface DeepDiveData {
   vwma_20d?: number;
   whale_signal?: boolean;
   split_signal?: boolean;
-  big_player_anomaly?: number;
-  avg_order_volume?: number;
-  ma50_avg_order_volume?: number;
 }
 
 interface Props {
@@ -45,32 +41,14 @@ export default function DeepDivePlotly({ data }: Props) {
   const splitY = useMemo(() => data.filter(d => d.split_signal).map(d => d.low * 0.97), [data]);
 
   // Volume colors
-  const volColors = useMemo(() => data.map((d, i) => 
-    d.close >= d.open ? '#26a69a' : '#ef5350'
+  const volColors = useMemo(() => data.map(d => 
+    d.close >= d.open ? '#26a69a66' : '#ef535066'
   ), [data]);
 
   // Foreign colors
   const foreignColors = useMemo(() => data.map(d => 
     (d.net_foreign_value || d.net_foreign_flow || 0) >= 0 ? '#26a69a' : '#ef5350'
   ), [data]);
-
-  const layout: any = {
-    height: 900,
-    grid: { rows: 4, columns: 1, roworder: 'top to bottom', pattern: 'independent' },
-    hovermode: 'x unified',
-    showlegend: false,
-    margin: { t: 30, b: 30, l: 50, r: 20 },
-    xaxis: { type: 'category', showticklabels: false },
-    xaxis2: { type: 'category', showticklabels: false },
-    xaxis3: { type: 'category', showticklabels: false },
-    xaxis4: { type: 'category', tickangle: -45, nticks: 15 },
-  };
-
-  const config = {
-    responsive: true,
-    displayModeBar: false,
-    scrollZoom: true,
-  };
 
   return (
     <Plot
@@ -88,7 +66,7 @@ export default function DeepDivePlotly({ data }: Props) {
           name: 'Price',
           xaxis: 'x',
           yaxis: 'y',
-        },
+        } as any,
         // VWMA 20D
         {
           type: 'scatter',
@@ -99,29 +77,29 @@ export default function DeepDivePlotly({ data }: Props) {
           name: 'VWMA 20D',
           xaxis: 'x',
           yaxis: 'y',
-        },
+        } as any,
         // Whale Markers
         ...(whaleX.length > 0 ? [{
           type: 'scatter',
           x: whaleX,
           y: whaleY,
           mode: 'markers',
-          marker: { symbol: 'triangle-down', size: 12, color: '#00cc00', line: { width: 1, color: 'black' } },
+          marker: { symbol: 'triangle-down', size: 14, color: '#00cc00', line: { width: 1, color: 'black' } },
           name: '🐋 Whale',
           xaxis: 'x',
           yaxis: 'y',
-        }] : []),
+        } as any] : []),
         // Split Markers
         ...(splitX.length > 0 ? [{
           type: 'scatter',
           x: splitX,
           y: splitY,
           mode: 'markers',
-          marker: { symbol: 'triangle-up', size: 12, color: '#ff4444', line: { width: 1, color: 'black' } },
+          marker: { symbol: 'triangle-up', size: 14, color: '#ff4444', line: { width: 1, color: 'black' } },
           name: '⚡ Split',
           xaxis: 'x',
           yaxis: 'y',
-        }] : []),
+        } as any] : []),
         // Panel 2: AOVol Ratio
         {
           type: 'scatter',
@@ -130,11 +108,11 @@ export default function DeepDivePlotly({ data }: Props) {
           mode: 'lines',
           line: { color: '#9c88ff', width: 2 },
           fill: 'tozeroy',
-          fillcolor: 'rgba(156, 136, 255, 0.1)',
+          fillcolor: 'rgba(156, 136, 255, 0.15)',
           name: 'AOVol Ratio',
           xaxis: 'x2',
           yaxis: 'y2',
-        },
+        } as any,
         // Panel 3: Volume
         {
           type: 'bar',
@@ -144,7 +122,7 @@ export default function DeepDivePlotly({ data }: Props) {
           name: 'Volume (Jt)',
           xaxis: 'x3',
           yaxis: 'y3',
-        },
+        } as any,
         // Panel 4: Foreign Flow
         {
           type: 'bar',
@@ -154,10 +132,24 @@ export default function DeepDivePlotly({ data }: Props) {
           name: 'Foreign (B)',
           xaxis: 'x4',
           yaxis: 'y4',
-        },
+        } as any,
       ]}
-      layout={layout}
-      config={config}
+      layout={{
+        height: 850,
+        grid: { rows: 4, columns: 1, roworder: 'top to bottom', pattern: 'independent' },
+        hovermode: 'x unified',
+        showlegend: false,
+        margin: { t: 20, b: 30, l: 50, r: 10 },
+        xaxis: { type: 'category', showticklabels: false },
+        xaxis2: { type: 'category', showticklabels: false },
+        xaxis3: { type: 'category', showticklabels: false },
+        xaxis4: { type: 'category', tickangle: -45, nticks: 20 },
+      }}
+      config={{
+        responsive: true,
+        displayModeBar: false,
+        scrollZoom: true,
+      }}
       useResizeHandler={true}
       style={{ width: '100%', height: '100%' }}
     />
