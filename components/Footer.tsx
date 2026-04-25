@@ -37,10 +37,7 @@ export default function Footer() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="uppercase tracking-wider font-medium transition-colors hover:text-accent"
-                style={{ color: 'var(--color-text-muted)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'; }}
+                className="footer-nav-link uppercase tracking-wider font-medium transition-colors"
               >
                 {item.label}
               </Link>

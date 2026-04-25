@@ -193,6 +193,14 @@
     color: var(--color-text-muted);
   }
 
+  /* ---- Footer nav links ---- */
+  .footer-nav-link {
+    color: var(--color-text-muted);
+  }
+  .footer-nav-link:hover {
+    color: var(--color-accent);
+  }
+
   /* ---- TopBar nav links ---- */
   .topbar-nav-link {
     color: var(--color-text-muted);
