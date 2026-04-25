@@ -24,27 +24,12 @@ export default function Sidebar() {
 
   const menuGroups = [
     {
-      title: 'Market',
+      title: 'Main',
       items: [
-        { href: '/', label: '📊 Dashboard', icon: '📊' },
-        { href: '/screener', label: '🎯 Screener Pro', icon: '🎯' },
-        { href: '/market-map', label: '🗺️ Market Map', icon: '🗺️' },
-        { href: '/market-breadth', label: '📈 Market Breadth', icon: '📈' },
-      ],
-    },
-    {
-      title: 'Analysis',
-      items: [
-        { href: '/heatmap', label: '🔥 Sector Heatmap', icon: '🔥' },
-        { href: '/compare', label: '⚖️ Compare', icon: '⚖️' },
-        { href: '/top-whale', label: '🏆 Top Whale', icon: '🏆' },
-        { href: '/whale-tracker', label: '🐋 Whale Tracker', icon: '🐋' },
-      ],
-    },
-    {
-      title: 'Quant',
-      items: [
-        { href: '/quant', label: '🧪 Quant Lab', icon: '🧪' },
+        { href: '/', label: ' Dashboard', icon: '📊' },
+        { href: '/screener', label: ' Screener', icon: '🎯' },
+        { href: '/insight', label: ' Insight', icon: '💡' },
+        { href: '/compare', label: ' Compare', icon: '⚖️' },
       ],
     },
     {
