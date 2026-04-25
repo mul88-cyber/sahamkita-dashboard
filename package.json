@@ -21,6 +21,9 @@
     "tailwind-merge": "^2.0.0",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
+    "react-plotly.js": "^2.6.0",
+    "plotly.js": "^2.30.0",
+    "@types/react-plotly.js": "^2.6.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
